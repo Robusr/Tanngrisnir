@@ -1,0 +1,1220 @@
+% =============================================================================
+%  二轮平衡小车系统设计 — 项目设计报告
+%  华中科技大学 机械科学与工程学院
+%  编译方式: XeLaTeX + BibTeX (macOS)
+% =============================================================================
+\documentclass[12pt,a4paper,UTF8]{ctexrep}
+
+% --------------- 字符与字体 ---------------
+\ctexset{
+  chapter = {
+    format     = \centering\heiti\zihao{3},
+    nameformat = {},
+    number     = \chinese{chapter},
+    name       = {第,章},
+    aftername  = \quad,
+    titleformat= {},
+  },
+  section = {
+    format    = \raggedright\heiti\zihao{4},
+    aftername = \quad,
+  },
+  subsection = {
+    format    = \raggedright\heiti\zihao{-4},
+    aftername = \quad,
+  },
+}
+
+% --------------- 页面布局 ---------------
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm, headheight=14pt]{geometry}
+\usepackage{setspace}
+\setstretch{1.5}                        % 1.5 倍行距
+\setlength{\parindent}{2em}             % 首行缩进 2 字符
+\usepackage{indentfirst}
+
+% --------------- 图表与颜色 ---------------
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage[svgnames]{xcolor}
+\usepackage{caption}
+\captionsetup{font=small, labelsep=quad}
+\renewcommand{\figurename}{图}
+\renewcommand{\tablename}{表}
+
+% --------------- TikZ 流程图 ---------------
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, fit, calc, backgrounds, chains}
+% 通用样式
+\tikzset{
+  block/.style    = {rectangle, draw, fill=gray!5, text width=3.0cm,
+                     text centered, minimum height=7mm, font=\footnotesize, rounded corners=3pt},
+  dblock/.style   = {rectangle, draw, fill=yellow!15, text width=2.8cm,
+                     text centered, minimum height=8mm, font=\footnotesize, rounded corners=2pt,
+                     inner sep=2pt},
+  arr/.style      = {thick, -Latex},
+  unit/.style     = {rectangle, draw, fill=green!8, text width=2.8cm,
+                     text centered, minimum height=8mm, rounded corners=2pt, font=\footnotesize},
+}
+
+% --------------- 代码块（带行号、文件路径） ---------------
+\usepackage{listings}
+\definecolor{codebg}{RGB}{245,245,245}
+\definecolor{codeframe}{RGB}{200,200,200}
+\definecolor{codekey}{RGB}{0,0,200}
+\definecolor{codecomment}{RGB}{0,128,0}
+\definecolor{codestring}{RGB}{163,21,21}
+\lstset{
+  basicstyle          = \zihao{-5}\ttfamily,
+  keywordstyle        = \color{codekey},
+  commentstyle        = \color{codecomment}\itshape,
+  stringstyle         = \color{codestring},
+  backgroundcolor     = \color{codebg},
+  frame               = single,
+  framerule           = 0.5pt,
+  rulecolor           = \color{codeframe},
+  numbers             = left,
+  numberstyle         = \tiny\color{gray},
+  numbersep           = 6pt,
+  breaklines          = true,
+  breakatwhitespace   = false,
+  showstringspaces    = false,
+  tabsize             = 4,
+  captionpos          = t,
+  abovecaptionskip    = 4pt,
+  belowcaptionskip    = 0pt,
+  xleftmargin         = 1em,
+  framexleftmargin    = 1em,
+  aboveskip           = 8pt,
+  belowskip           = 4pt,
+  escapeinside        = {(*@}{@*)},      % 在代码块中临时切换 LaTeX
+}
+
+% --------------- 超链接 ---------------
+\usepackage[hidelinks]{hyperref}
+
+% --------------- 表格增强 ---------------
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{multirow}
+
+% --------------- 数学 ---------------
+\usepackage{amsmath, amssymb}
+
+% --------------- 页眉页脚 ---------------
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small 华中科技大学机械科学与工程学院}
+\fancyhead[R]{\small 项目设计报告}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\begin{document}
+
+% #############################################################################
+%                                封    面
+% #############################################################################
+\newgeometry{top=2cm, bottom=2cm, left=2.5cm, right=2.5cm}
+\thispagestyle{empty}
+
+\begin{center}
+  % 校徽
+  \includegraphics[width=5cm]{./img/logo.png}
+  \vspace{12pt}
+
+  {\heiti\zihao{1} 华中科技大学}
+
+  \vspace{4pt}
+  {\heiti\zihao{2} 机械科学与工程学院}
+
+  \vspace{24pt}
+  {\heiti\zihao{1} 项目设计报告}
+
+  \vspace{12pt}
+  \rule{0.65\textwidth}{0.5pt}
+
+  \vspace{10pt}
+  {\heiti\zihao{2} 工程项目名称——二轮平衡小车系统设计}
+
+  \vspace{36pt}
+\end{center}
+
+\begin{flushright}
+  \begin{tabular}{rl}
+    {\heiti\zihao{4} 姓\quad 名：} & \underline{\makebox[6cm]{\hfill\heiti\zihao{4}郭沫晗，郑浩东\hfill}} \\[10pt]
+    {\heiti\zihao{4} 学\quad 号：} & \underline{\makebox[6cm]{\hfill\heiti\zihao{4}U202515287，U202515279\hfill}} \\[10pt]
+    {\heiti\zihao{4} 班\quad 级：} & \underline{\makebox[6cm]{\hfill\heiti\zihao{4}机器人科创2502班\hfill}} \\[10pt]
+    {\heiti\zihao{4} 指导老师：} & \underline{\makebox[6cm]{\hfill\heiti\zihao{4}黄峥\hfill}} \\[10pt]
+    {\heiti\zihao{4} 日\quad 期：} & \underline{\makebox[6cm]{\hfill\heiti\zihao{4}2026年6月\hfill}} \\
+  \end{tabular}
+\end{flushright}
+
+\vspace{24pt}
+
+\begin{center}
+  \fbox{
+    \begin{minipage}{0.7\textwidth}
+      \centering
+      \vspace{2cm}
+      {\heiti\zihao{4} 学生(或项目小组全体成员)与项目作品合影照片}
+      \vspace{1cm}
+
+      {\kaishu\zihao{5}（粘贴处）}
+      \vspace{2cm}
+    \end{minipage}
+  }
+\end{center}
+
+\restoregeometry
+
+% #############################################################################
+%                                目    录
+% #############################################################################
+\newpage
+\setcounter{page}{1}
+\pagenumbering{roman}
+\renewcommand{\contentsname}{\centering\heiti\zihao{3} 目\quad 录}
+\tableofcontents
+
+% #############################################################################
+%                                正    文
+% #############################################################################
+\newpage
+\setcounter{page}{1}
+\pagenumbering{arabic}
+
+% =============================================================================
+%  第 1 章  项目概述与目标
+% =============================================================================
+\chapter{项目概述与目标}
+
+\section{项目背景}
+
+二轮自平衡小车是一种基于倒立摆原理的典型嵌入式控制系统。其物理本质是一阶倒立摆模型——小车质心位于轮轴上方，在无控制条件下为不稳定平衡系统，任何微小扰动都将导致倾倒。通过实时检测车体倾角并控制电机输出相应扭矩，系统可将这一天然不稳定系统转化为动态稳定系统。
+
+该课题在工程领域具有广泛的实用价值：其核心控制算法与双足机器人、自平衡代步车（如Segway）、灵巧型无人机等工程系统的姿态稳定原理一脉相承。在教学层面，二轮平衡小车项目涵盖了微控制器开发、传感器数据融合、PID控制算法、电机驱动技术、嵌入式实时软件设计等多项核心知识点，是机械电子工程专业课程设计的理想载体。
+
+本项目的硬件平台基于意法半导体（STMicro\-electronics）STM32F103C8T6微控制器，搭载InvenSense MPU6050六轴姿态传感器（内置DMP数字运动处理器），采用TB6612双通道H桥驱动芯片驱动直流减速电机，并通过正交编码器实现轮速闭环反馈，构成完整的嵌入式闭环控制系统。
+
+\section{基础设计目标}
+
+根据项目任务书要求，本系统须达成以下基础设计目标：
+
+\begin{enumerate}
+  \item \textbf{直立稳定}：小车上电后能够在平坦地面自主保持直立平衡状态，稳态条件下轮向位移误差不超过 5\,cm。
+  \item \textbf{抗干扰能力}：在承受 10° 以内摆幅的外力干扰后，系统可自主恢复至平衡状态，不出现不可逆倾倒。
+  \item \textbf{低压保护功能}：当电池电压经 ADC 采样换算后低于 10.0\,V 时（对应 3S 锂电池单节约 3.33\,V），系统自动关闭电机平衡控制输出，以保护电池与硬件电路。
+\end{enumerate}
+
+\section{扩展设计目标}
+
+在完成基础功能之上，本系统进一步实现了如下扩展功能：
+
+\begin{enumerate}
+  \item \textbf{OLED 状态显示}：通过 0.96 英寸 OLED 屏幕实时显示俯仰角（°）、角速度（°/s）、电池电压（mV）三项关键运行参数，便于调试与运行监控。
+  \item \textbf{虚拟示波器（DataScope）}：基于 USART 串口通信协议，将运行时内部变量实时上传至上位机 DataScope 软件，以波形方式可视化角度、速度、电压等物理量，极大提升调试效率。
+  \item \textbf{独立按键启停}：通过板上独立按键实现电机输出的一键启停控制，满足安全操作需求。
+  \item \textbf{LED 状态指示}：以板载 LED 指示系统运行与停止状态。
+\end{enumerate}
+
+上述扩展项在设计评审中对应加分评价体系——OLED 显示占附加分 5\%、虚拟示波器占附加分 5\%。
+
+\section{报告整体结构说明}
+
+本报告共分为六章：第 1 章阐述项目背景与设计目标；第 2 章论述整体方案设计与关键模块选型论证；第 3 章详细描述系统硬件架构与软件架构；第 4 章深入分析核心关键技术及其程序实现；第 5 章系统梳理分模块调试、联调与参数整定全过程；第 6 章总结项目成果、收获与展望。
+
+% =============================================================================
+%  第 2 章  项目方案
+% =============================================================================
+\chapter{项目方案}
+
+\section{整体设计思路}
+
+本系统采用基于 STM32 微控制器的闭环反馈控制总体架构，核心设计思路如下：
+
+\begin{enumerate}
+  \item \textbf{感知层}：通过 MPU6050 六轴传感器实时获取车体俯仰角（pitch）与角速度（gyro rate），通过正交编码器记录左右车轮的速度信息，通过 ADC 采集电池电压。
+  \item \textbf{决策层}：以串级 PID 控制算法为核心——内环直立环（PD 控制）以姿态角为反馈量保持车体平衡；外环速度环（PI 控制）以编码器脉冲计数为反馈量调控车速，消除稳态位置漂移。
+  \item \textbf{执行层}：将 PID 计算得到的 PWM 脉宽信号输出至 TB6612 电机驱动芯片，控制直流减速电机的转向与转速，产生所需平衡力矩。
+\end{enumerate}
+
+系统整体控制周期为 10\,ms（100\,Hz），由 MPU6050 的 200\,Hz 外部中断经 2 分频产生，确保控制实时性。
+
+\section{系统工作原理}
+
+二轮平衡小车的动力学本质为一阶倒立摆。设车体倾角为 $\theta$（前倾为正），重力加速度为 $g$，等效摆长为 $L$，则无控制条件下车体的线性化运动方程为：
+
+\begin{equation}
+  \ddot{\theta} = \frac{g}{L}\,\theta
+\end{equation}
+
+该微分方程的特征值为正实数，表明系统开环不稳定——任何非零初始倾角 $\theta(0) \neq 0$ 均导致指数增长直至倾倒。闭环控制的核心在于：通过电机对车轮施加扭矩 $T_m$，产生与倾角 $\theta$ 成比例的回复力矩，将式(2-1)改写为：
+
+\begin{equation}
+  \ddot{\theta} = \frac{g}{L}\,\theta - K_p\,\theta - K_d\,\dot{\theta}
+\end{equation}
+
+式中 $K_p$ 为比例增益（提供与角度偏差成比例的回复力），$K_d$ 为微分增益（提供与角速度成比例的阻尼力）。当 $K_p > g/L$ 时，系统极点移至左半平面，车体恢复稳定。
+
+\section{方案选型论证}
+
+\subsection{主控芯片：STM32F103C8T6}
+
+STM32F103C8T6 是意法半导体基于 ARM Cortex-M3 内核的 32 位微控制器，其主要资源参数与本系统需求匹配分析如表 2-1 所示。
+
+\begin{table}[H]
+  \centering
+  \caption{STM32F103C8T6 资源匹配分析}
+  \label{tbl:mcu}
+  \begin{tabular}{p{2.5cm}p{3cm}p{3cm}p{3.5cm}}
+    \toprule
+    \textbf{资源项} & \textbf{芯片参数} & \textbf{本系统需求} & \textbf{匹配度} \\
+    \midrule
+    主频        & 72\,MHz          & $\geq$ 48\,MHz    & 满足 \\
+    Flash       & 64\,KB           & 固件 $\approx$ 40\,KB & 满足 \\
+    SRAM        & 20\,KB           & 运行时 $\approx$ 8\,KB & 满足 \\
+    定时器      & 4 个通用 + 2 个高级 & 4 路 PWM + 2 路编码器 & 满足 \\
+    I2C 接口    & 2 路             & MPU6050 $\times$ 1     & 满足 \\
+    USART       & 3 路             & 调试输出 $\times$ 1    & 满足 \\
+    ADC         & 2 个（12 位）   & 电池电压 $\times$ 1    & 满足 \\
+    GPIO        & 37 个            & $\approx$ 18 路        & 充裕 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+选型依据：STM32F103C8T6 在嵌入式教学实验中应用广泛，生态成熟，Keil MDK 集成开发环境支持完善，且本项目所需全部外设资源均可由该芯片提供，无额外扩展需求。
+
+\subsection{姿态传感器：MPU6050 + DMP}
+
+MPU6050 是 InvenSense 公司的六轴运动传感器，内部集成三轴陀螺仪、三轴加速度计及一个可编程的数字运动处理器（Digital Motion Processor, DMP）。相比分立传感器方案，其核心优势在于：
+
+\begin{enumerate}
+  \item \textbf{DMP 硬件姿态解算}：DMP 可直接输出四元数/欧拉角，将复杂的姿态解算（Madg\-wick / Mahony 滤波算法）从 MCU 卸载到传感器硬件，显著降低 MCU 运算负荷。
+  \item \textbf{单芯片集成}：陀螺仪与加速度计已内部校准，避免分立器件间的轴间误差。
+  \item \textbf{200\,Hz 中断输出}：INT 引脚可配置为数据就绪中断，天然适配本系统的 10\,ms 定时控制周期。
+\end{enumerate}
+
+\subsection{电机驱动：TB6612}
+
+TB6612FNG 是东芝半导体的双通道 H 桥电机驱动芯片，主要性能参数为：单通道持续输出电流 1.2\,A（峰值 3.2\,A），支持 PWM 频率最高 100\,kHz，内置低导通电阻 MOSFET（0.5\,$\Omega$），待机电流小于 1\,$\mu$A。其控制逻辑简洁——每个电机仅需 3 个控制引脚（PWM + IN1 + IN2），与 L298N 相比体积更小、效率更高、外接元件更少。
+
+\subsection{控制算法：串级 PID}
+
+本系统采用串级 PID 方案（内环直立 PD + 外环速度 PI），其选型理由如下：
+
+\begin{enumerate}
+  \item \textbf{串级结构的鲁棒性}：内环（直立环）以最高优先级维持车体姿态稳定，外环（速度环）通过调节内环的期望倾角间接控制车速。两环解耦良好，各自参数独立可调。
+  \item \textbf{PD 直立环的物理合理性}：比例项 $K_p\theta$ 提供与倾角成比例的回复力，微分项 $K_d\dot{\theta}$ 提供与角速度成比例的阻尼力——二者共同构成机械弹簧-阻尼系统的电学等效，物理意义明确。
+  \item \textbf{PI 速度环消静差}：积分项 $\int e\,dt$ 持续累加速度偏差，直至稳态误差为零，解决纯比例控制下小车缓慢漂移的问题。
+\end{enumerate}
+
+% =============================================================================
+%  第 3 章  系统硬件及软件架构
+% =============================================================================
+\chapter{系统硬件及软件架构}
+
+\section{系统硬件架构}
+
+\subsection{硬件整体框图}
+
+系统硬件由五大功能单元构成：主控单元（STM32F103 最小系统）、电机驱动单元（TB6612 + 直流减速电机 + 正交编码器）、姿态传感单元（MPU6050）、电源单元（3S 锂电池 + 稳压电路 + 分压采集）、人机交互单元（OLED 显示屏 + 独立按键 + LED 指示灯 + USART 串口）。各单元连接关系如图 \ref{fig:hw_block} 所示。
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+    node distance = 8mm and 12mm,
+    block/.style = {rectangle, draw, fill=blue!10, text width=3.2cm,
+                    text centered, minimum height=9mm, rounded corners=2pt, font=\small},
+    unit/.style  = {rectangle, draw, fill=green!8, text width=2.8cm,
+                    text centered, minimum height=8mm, rounded corners=2pt, font=\footnotesize},
+    arrow/.style = {thick, -{Latex[scale=0.8]}},
+  ]
+    % 主控
+    \node [block, fill=blue!15, minimum height=2.4cm, text width=3.6cm] (mcu) {\textbf{主控单元}\\STM32F103C8T6\\Cortex-M3 @ 72MHz};
+    % 四周子模块
+    \node [unit, above left=of mcu] (mpu) {\textbf{姿态传感}\\MPU6050\\I2C + INT};
+    \node [unit, above right=of mcu] (power) {\textbf{电源单元}\\3S 锂电池\\11:1 ADC 分压};
+    \node [unit, below left=of mcu] (motor) {\textbf{电机驱动}\\TB6612 $\times$ 2\\PWM + 编码器};
+    \node [unit, below right=of mcu] (hmi) {\textbf{人机交互}\\OLED / 按键 / LED\\USART DataScope};
+    % 连接箭头
+    \draw [arrow] (mpu.south) -- (mcu.north west) node[midway,left,font=\tiny] {I2C};
+    \draw [arrow] (mcu.north west) -- (mpu.east) node[midway,above,font=\tiny] {INT};
+    \draw [arrow] (power.south) -- (mcu.north east) node[midway,right,font=\tiny] {ADC};
+    \draw [arrow] (mcu.south west) -- (motor.north) node[midway,left,font=\tiny] {PWM/GPIO};
+    \draw [arrow] (motor.north east) -- (mcu.south) node[midway,right,font=\tiny] {Encoder};
+    \draw [arrow] (mcu.south east) -- (hmi.north) node[midway,right,font=\tiny] {SPI/USART};
+  \end{tikzpicture}
+  \caption{系统硬件架构框图}
+  \label{fig:hw_block}
+\end{figure}
+
+\subsection{各模块详细说明}
+
+\subsubsection{主控模块}
+
+STM32F103C8T6 最小系统包含：8\,MHz 外部晶振（经内部 PLL 倍频至 72\,MHz）、3.3\,V 稳压供电（AMS1117-3.3）、SWD 调试接口（ST-Link / J-Link）、复位电路。片上外设资源配置汇总如表 \ref{tbl:peripheral} 所示。
+
+\begin{table}[H]
+  \centering
+  \caption{片上外设资源分配总表}
+  \label{tbl:peripheral}
+  \small
+  \begin{tabular}{cccc}
+    \toprule
+    \textbf{外设} & \textbf{通道} & \textbf{功能} & \textbf{关联引脚} \\
+    \midrule
+    TIM1     & CH1 + CH4    & 双路 PWM 输出（电机 A / B） & PA8、PA11 \\
+    TIM3     & CH1 + CH2    & 左轮编码器 AB 相计数      & PA6、PA7 \\
+    TIM4     & CH1 + CH2    & 右轮编码器 AB 相计数      & PB6、PB7 \\
+    I2C2     & SCL + SDA    & MPU6050 通信（地址 0x68） & PB10、PB11 \\
+    ADC1     & CH8          & 电池电压采集（12 位）     & PB0 \\
+    USART1   & TX + RX      & 调试输出与 DataScope      & PA9、PA10 \\
+    EXTI9-5  & PA5          & KEY0 独立按键中断         & PA5 \\
+    EXTI15-10 & PA12        & MPU6050 INT 中断（200\,Hz） & PA12 \\
+    GPIO     & —            & OLED SPI 软件模拟 $\times$ 4 & PB3/PB4/PB5/PA1/PA15 \\
+    GPIO     & —            & 电机方向控制 IN1/IN2 $\times$ 4 & PB12--PB15 \\
+    GPIO     & —            & 状态 LED                  & PA4 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsubsection{电机与驱动模块}
+
+电机选用直流减速电机，自带 AB 相正交编码器。编码器每转输出固定脉冲数（典型值 390 PPR，经 4 倍频后为 1560 计数/转），通过 TIM3 / TIM4 的编码器模式自动对 AB 相脉冲计数，无需 CPU 干预。
+
+TB6612 电机驱动逻辑如表 \ref{tbl:tb6612} 所示，每个电机需 3 个控制信号。
+
+\begin{table}[H]
+  \centering
+  \caption{TB6612 电机控制逻辑}
+  \label{tbl:tb6612}
+  \begin{tabular}{ccc}
+    \toprule
+    \textbf{IN1} & \textbf{IN2} & \textbf{电机状态} \\
+    \midrule
+    1 & 0 & 正转（前进） \\
+    0 & 1 & 反转（后退） \\
+    1 & 1 & 短接制动 \\
+    0 & 0 & 滑行停止 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsubsection{姿态传感模块}
+
+MPU6050 通过 I2C2 接口与 MCU 通信，SCL 为 PB10、SDA 为 PB11，器件地址为 0x68。INT 中断引脚连接至 PA12，配置为下降沿触发，MPU6050 DMP 数据就绪时以 200\,Hz 频率产生中断信号。该中断作为系统控制周期的时基来源。
+
+\subsubsection{电源模块}
+
+系统采用 3S 锂电池供电（标称电压 11.1\,V，满电约 12.6\,V）。电池电压经 11:1 电阻分压网络（R1 = 100\,k$\Omega$ / R2 = 10\,k$\Omega$）衰减后，送入 STM32 的 ADC1\_CH8（PB0）进行 12 位模数转换。换算公式为：
+
+\begin{equation}
+  V_{\text{bat}} = \frac{V_{\text{ADC}}}{2^{12}} \times 3.3 \times \frac{R_1+R_2}{R_2}
+                 = \frac{V_{\text{ADC}}}{4096} \times 3.3 \times 11
+\end{equation}
+
+式中 $V_{\text{ADC}}$ 为 ADC 原始数值，3.3\,V 为 ADC 参考电压。
+
+\subsubsection{人机交互模块}
+
+\begin{itemize}
+  \item \textbf{OLED 显示屏}：0.96 英寸 SSD1306 驱动，分辨率 128$\times$64，采用 4 线 SPI 软件模拟接口（PB3-RST、PA1-CS、PA15-D/C、PB5-SCLK、PB4-SDIN），实时刷新显示俯仰角（pitAngle）、角速度（pitVel）、电池电压（batVol）三个关键参数。
+  \item \textbf{独立按键}：KEY0 连接 PA5，下降沿触发 EXTI 中断，实现电机输出启停切换。
+  \item \textbf{状态 LED}：PA4 驱动，亮起表示电机运行中，熄灭表示已停机。
+  \item \textbf{USART 串口}：USART1（PA9-TX / PA10-RX）经 CH340 USB 转串口芯片连接至上位机，实现 printf 调试输出与 DataScope 虚拟示波器数据上传。
+\end{itemize}
+
+\subsection{硬件引脚映射表}
+
+完整引脚映射关系如表 \ref{tbl:pins} 所示。
+
+\begin{table}[H]
+  \centering
+  \caption{系统硬件引脚映射总表}
+  \label{tbl:pins}
+  \small
+  \begin{tabular}{cccc}
+    \toprule
+    \textbf{功能} & \textbf{引脚} & \textbf{GPIO} & \textbf{外设/模式} \\
+    \midrule
+    电机 A PWM    & PA8  & TIM1\_CH1  & 高级定时器 PWM \\
+    电机 B PWM    & PA11 & TIM1\_CH4  & 高级定时器 PWM \\
+    电机 A IN1    & PB14 & GPIO       & 推挽输出 \\
+    电机 A IN2    & PB15 & GPIO       & 推挽输出 \\
+    电机 B IN1    & PB13 & GPIO       & 推挽输出 \\
+    电机 B IN2    & PB12 & GPIO       & 推挽输出 \\
+    左编码器 A    & PA6  & TIM3\_CH1  & 编码器模式 \\
+    左编码器 B    & PA7  & TIM3\_CH2  & 编码器模式 \\
+    右编码器 A    & PB6  & TIM4\_CH1  & 编码器模式 \\
+    右编码器 B    & PB7  & TIM4\_CH2  & 编码器模式 \\
+    MPU6050 SCL   & PB10 & I2C2\_SCL  & I2C 通信 \\
+    MPU6050 SDA   & PB11 & I2C2\_SDA  & I2C 通信 \\
+    MPU6050 INT   & PA12 & EXTI15\_10 & 下降沿中断 \\
+    OLED RST      & PB3  & GPIO       & 推挽输出 \\
+    OLED CS       & PA1  & GPIO       & 推挽输出 \\
+    OLED RS(D/C)  & PA15 & GPIO       & 推挽输出 \\
+    OLED SCLK     & PB5  & GPIO       & 推挽输出（软件 SPI） \\
+    OLED SDIN     & PB4  & GPIO       & 推挽输出（软件 SPI） \\
+    KEY0          & PA5  & EXTI9\_5   & 下降沿中断 \\
+    LED           & PA4  & GPIO       & 推挽输出 \\
+    电池 ADC      & PB0  & ADC1\_CH8  & 12 位 ADC \\
+    USART1 TX     & PA9  & USART1\_TX & 115200\,bps \\
+    USART1 RX     & PA10 & USART1\_RX & 115200\,bps \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{系统软件架构}
+
+\subsection{软件设计思想}
+
+本系统采用前后台软件架构（Foreground/Background System）：
+
+\begin{itemize}
+  \item \textbf{前台（中断服务程序 ISR）}：以 MPU6050 200\,Hz 外部中断为时基，每 5\,ms 触发一次中断。在中断服务中，通过 tenMsFlag 软件分频实现：奇数中断（5\,ms 标记）执行编码器速度读取与 DMP 姿态数据读取；偶数中断（10\,ms 标记）执行 PID 控制运算、电池电压采样、PWM 输出更新。所有实时控制逻辑均在中断上下文中完成，保证 10\,ms 确定的控制周期。
+  \item \textbf{后台（主循环 while(1)）}：处理非实时任务——OLED 显示刷新、电压保护检查、延迟等待。由于实时控制已在中断中完成，主循环可适当容忍延迟，不影响系统稳定性。
+\end{itemize}
+
+\subsection{主程序总流程图}
+
+主程序执行流程如图 \ref{fig:main_flow} 所示。
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+    node distance = 6mm,
+    block/.style = {rectangle, draw, fill=gray!5, text width=3.0cm,
+                    text centered, minimum height=7mm, font=\footnotesize, rounded corners=3pt},
+    arr/.style = {thick, -Latex},
+  ]
+    \node [block] (start) {开始（上电复位）};
+    \node [block, below=of start] (hal) {HAL 库初始化\\系统时钟 72\,MHz};
+    \node [block, below=of hal] (init) {外设初始化：\\ADC / MPU6050 / DMP\\EXTI / OLED / 电机 / 编码器};
+    \node [block, below=of init] (display) {OLED 显示初始信息};
+    \node [block, below=of display] (delay) {延时 1\,s 等待系统稳定};
+    \node [block, below=of delay] (oled) {OLED 刷新显示\\（角度、角速度、电压）};
+    \node [dblock, below=of oled] (check) {电池电压\\$\!<\!$ 10.0\,V？};
+    \node [block, right=2.4cm of check] (shutdown) {电机停机\\串口告警};
+    \node [block, below=of check] (sleep) {延时 10\,ms};
+    \node [below=0.6cm of sleep] (back) {};
+    \draw [arr] (start) -- (hal);
+    \draw [arr] (hal) -- (init);
+    \draw [arr] (init) -- (display);
+    \draw [arr] (display) -- (delay);
+    \draw [arr] (delay) -- (oled);
+    \draw [arr] (oled) -- (check);
+    \draw [arr] (check) -- node[above] {是} (shutdown);
+    \draw [arr] (check) -- node[left] {否} (sleep);
+    \draw [arr] (sleep) -- (back.center);
+    \draw [->, thick] (back.center) -- ++(-4.25,0) |- (oled.west);
+  \end{tikzpicture}
+  \caption{主程序流程图}
+  \label{fig:main_flow}
+\end{figure}
+
+\subsection{软件分层结构}
+
+本系统软件分为三个层次，如表 \ref{tbl:sw_layer} 所示。
+
+\begin{table}[H]
+  \centering
+  \caption{软件分层结构}
+  \label{tbl:sw_layer}
+  \small
+  \begin{tabular}{cp{5.5cm}p{6.5cm}}
+    \toprule
+    \textbf{层次} & \textbf{模块} & \textbf{文件} \\
+    \midrule
+    \multirow{4}{*}{BSP 驱动层}
+      & LED 驱动      & Drivers/BSP/LED/led.c \\
+      & 按键驱动      & Drivers/BSP/KEY/key.c \\
+      & 电机驱动      & Drivers/BSP/MOTOR/motor.c \\
+      & 编码器驱动    & Drivers/BSP/ENCODER/encoder.c \\
+      & MPU6050 驱动  & Drivers/BSP/ATK\_MS6050/atk\_ms6050.c \\
+      & ADC 驱动      & Drivers/BSP/ADC/adc.c \\
+      & OLED 驱动     & Drivers/BSP/OLED/oled.c \\
+      & 外部中断驱动  & Drivers/BSP/EXTI/exti.c \\
+      & 通用定时器    & Drivers/BSP/TIMER/gtim.c \\
+    \hline
+    \multirow{2}{*}{算法层}
+      & 串级 PID 控制  & Drivers/BSP/EXTI/exti.c（Balance、Velocity） \\
+      & 数据滤波       & Drivers/BSP/EXTI/exti.c（readVolt 滑动平均） \\
+    \hline
+    \multirow{3}{*}{应用层}
+      & 主程序入口    & User/main.c \\
+      & OLED 数据显示 & User/oledShow.c \\
+      & 虚拟示波器    & User/curveShow.c \\
+      & 工具函数      & User/utilities.c \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{核心中断流程图}
+
+MPU6050 外部中断服务程序是系统控制的核心调度器，其执行流程如图 \ref{fig:isr_flow} 所示。
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+    node distance = 5mm,
+    block/.style = {rectangle, draw, fill=gray!5, text width=3.0cm,
+                    text centered, minimum height=7mm, font=\footnotesize, rounded corners=3pt},
+    arr/.style = {thick, -Latex},
+  ]
+    \node [block] (isr) {MPU6050 INT 中断入口\\(200\,Hz)};
+    \node [block, below=of isr] (read) {readVel()：读取编码器速度\\readMpu()：读取 DMP 姿态};
+    \node [block, below=of read] (toggle) {tenMsFlag = !tenMsFlag};
+    \node [dblock, below=of toggle] (flag) {tenMsFlag == 1 ?};
+    \node [block, right=2.4cm of flag] (volt) {readVolt(10)：\\滑动平均采集电池电压};
+    \node [block, below=of volt] (ret) {返回};
+    \node [block, below=of flag] (pid) {Balance(angle, gyro)：\\直立 PD 控制};
+    \node [block, below=of pid] (vel) {Velocity(encL, encR)：\\速度 PI 控制};
+    \node [block, below=of vel, text width=3.5cm] (sum) {Motor\_PWM = Balance + Velocity\\PWM\_Limit($\pm$6900)};
+    \node [dblock, below=of sum] (safe) {Turn\_Off()\\无异常？};
+    \node [block, below=of safe] (drive) {motorMove(L,R)：\\输出 PWM 至电机};
+    \node [block, right=2.4cm of safe] (stop) {关停电机};
+    \node [block, below=of drive] (exit) {退出中断};
+    \draw [arr] (isr) -- (read);
+    \draw [arr] (read) -- (toggle);
+    \draw [arr] (toggle) -- (flag);
+    \draw [arr] (flag) -- node[above,font=\footnotesize] {否 (5ms任务)} (volt);
+    \draw [arr] (volt) -- (ret);
+    \draw [arr] (flag) -- node[left,font=\footnotesize] {是 (10ms任务)} (pid);
+    \draw [arr] (pid) -- (vel);
+    \draw [arr] (vel) -- (sum);
+    \draw [arr] (sum) -- (safe);
+    \draw [arr] (safe) -- node[left] {是} (drive);
+    \draw [arr] (safe) -- node[above] {否} (stop);
+    \draw [arr] (drive) -- (exit);
+    \draw [arr] (stop) |- (exit);
+  \end{tikzpicture}
+  \caption{MPU6050 外部中断 ISR 执行流程图}
+  \label{fig:isr_flow}
+\end{figure}
+
+\subsection{系统初始化流程}
+
+系统上电后依次完成以下初始化步骤：
+
+\begin{enumerate}
+  \item \texttt{HAL\_Init()}：初始化 HAL 库基本框架（SysTick 配置、NVIC 分组）。
+  \item \texttt{sys\_stm32\_clock\_init(RCC\_PLL\_MUL9)}：配置系统时钟，8\,MHz 外部晶振经 PLL 9 倍频至 72\,MHz，APB1 = 36\,MHz，APB2 = 72\,MHz。
+  \item \texttt{delay\_init(72)}：以 SysTick 为时基的毫秒/微秒延时函数初始化。
+  \item \texttt{usart\_init(115200)}：USART1 初始化为 115200\,bps，8N1 格式，使能 printf 重定向。
+  \item \texttt{adc\_init()}：ADC1 通道 8（PB0）初始化，12 位分辨率。
+  \item \texttt{atk\_ms6050\_init()}：MPU6050 传感器初始化，I2C 通信链路建立，复位并唤醒器件。
+  \item \texttt{atk\_ms6050\_dmp\_init()}：加载 DMP 固件，配置 FIFO 输出频率 200\,Hz，使能 DMP 中断。
+  \item \texttt{exti\_mpu6050\_init()}：配置 PA12 为下降沿外部中断，连接至 MPU6050 INT 引脚。
+  \item \texttt{exti\_key0\_init()}：配置 PA5 为下降沿外部中断，连接至 KEY0 独立按键。
+  \item \texttt{oled\_init()}：OLED SSD1306 控制器初始化，清屏并设置对比度。
+  \item \texttt{motorInit()}：TIM1 CH1/CH4 配置为 PWM 输出，电机方向控制引脚初始化。
+  \item \texttt{leftEncoderInit() / rightEncoderInit()}：TIM3 / TIM4 配置为编码器模式，设置计数位宽。
+\end{enumerate}
+
+% =============================================================================
+%  第 4 章  关键技术及程序设计说明
+% =============================================================================
+\chapter{关键技术及程序设计说明}
+
+\section{核心关键技术}
+
+\subsection{姿态解算技术}
+
+MPU6050 内置的 DMP（Digital Motion Processor）是本系统姿态解算的核心。DMP 通过专用固件对陀螺仪与加速度计数据进行传感器融合，内部执行扩展卡尔曼滤波（EKF），以 200\,Hz 频率输出经过校准的姿态四元数。MCU 通过 \texttt{dmp\_read\_fifo()} 接口读取 FIFO 缓冲区的四元数，经 DMP 库函数转换为欧拉角（pitch / roll / yaw）。
+
+关键数据接口定义如下：
+
+\begin{itemize}
+  \item \texttt{pit}（pitch 俯仰角）：绕车身横向轴（左右方向）的旋转角度，单位度（°），前倾为正值（符号取反后传给控制环）。
+  \item \texttt{gyro[0]}（x 轴角速度）：绕俯仰轴的角速度，单位度/秒（°/s），陀螺仪直接输出，无需积分。
+\end{itemize}
+
+坐标系定义与极性约定详见代码注释。在调试阶段，须通过前倾/后倾小车验证角度与角速度的数值符号是否正确——前倾时 \texttt{pit} 为负值、\texttt{-pit} 为正值，\texttt{gyro[0]} 为正值，Balance 函数输出正向 PWM 驱动机器人向前加速以恢复平衡。
+
+\subsection{电机调速技术}
+
+\subsubsection{PWM 脉冲宽度调制原理}
+
+TIM1 高级定时器以 72\,MHz 时钟源驱动，配置自动重装载值（ARR）为 7199，预分频器（PSC）为 0，则 PWM 频率为：
+
+\begin{equation}
+  f_{\text{PWM}} = \frac{72\,\text{MHz}}{(\text{PSC}+1) \times (\text{ARR}+1)}
+                 = \frac{72 \times 10^6}{1 \times 7200} = 10\,\text{kHz}
+\end{equation}
+
+占空比通过 CCR 寄存器设置，取值范围 0$\sim$7199（对应 0\%$\sim$100\% 占空比）。实际使用中，PWM 输出进一步受 \texttt{PWM\_Limit()} 限制至 $\pm$6900 范围，避免满占空比对电路与电机的冲击。
+
+\subsubsection{TB6612 正反转控制逻辑}
+
+电机转向通过 IN1/IN2 两个方向引脚决定——PWM 信号施加于 PWM 输入引脚，IN1/IN2 决定电流方向。控制流程为：
+
+\begin{enumerate}
+  \item 判断 Motor\_PWM 符号：正值表示前进，负值表示后退。
+  \item 前进：IN1 = 1，IN2 = 0，PWM 占空比 = $|\text{Motor\_PWM}|$。
+  \item 后退：IN1 = 0，IN2 = 1，PWM 占空比 = $|\text{Motor\_PWM}|$。
+  \item 停止（stopFlag = 1 或 Motor\_PWM = 0）：IN1 = 0，IN2 = 0，PWM = 0。
+\end{enumerate}
+
+\subsection{编码器测速技术}
+
+\subsubsection{正交编码器 AB 相工作原理}
+
+电机轴上安装的光电/霍尔正交编码器输出两路相位差 90° 的脉冲信号（A 相与 B 相）。当电机正转时，A 相超前 B 相 90°；反转时，B 相超前 A 相 90°。TIM3 / TIM4 定时器的编码器模式通过硬件对两路输入的上升沿与下降沿进行计数（4 倍频），自动判断方向并更新计数器 CNT，无需软件轮询。
+
+\subsubsection{M 法测速}
+
+在固定时间窗口 $\Delta t$（本系统为 5\,ms）内读取编码器计数增量 $\Delta N$，按式(4-3)换算线速度：
+
+\begin{equation}
+  v = \frac{\Delta N}{4 \times \text{PPR}} \times \pi D \times \frac{1}{\Delta t}
+\end{equation}
+
+式中 PPR 为编码器单圈脉冲数（典型值 390），$D$ 为车轮直径（约 65\,mm），因子 4 来自 4 倍频。
+
+实际实现中，速度环仅需相对值——编码器脉冲增量直接作为比例反馈量，无需换算为物理速度，避免了浮点运算开销。
+
+\subsection{闭环控制技术}
+
+\subsubsection{直立环 PD 控制}
+
+直立环采用 PD（比例-微分）控制律，其连续域传递函数为：
+
+\begin{equation}
+  u_{\text{bal}}(t) = K_p^{\text{bal}} \cdot \theta(t)
+                    + K_d^{\text{bal}} \cdot \dot{\theta}(t)
+\end{equation}
+
+离散化后（控制周期 $T_s = 10\,\text{ms}$）：
+
+\begin{equation}
+  \text{Balance\_Pwm}[k] = K_p^{\text{bal}} \cdot \theta[k]
+                         + K_d^{\text{bal}} \cdot \dot{\theta}[k]
+\end{equation}
+
+式中 $\theta$ 为俯仰角、$\dot{\theta}$ 为俯仰角速度（直接来自陀螺仪，无需对角度微分数值差分）。比例项 $K_p\theta$ 提供与倾斜方向相反的回复力矩——前倾时输出正向 PWM 驱动车轮前移；微分项 $K_d\dot{\theta}$ 提供与角速度方向相反的阻尼力矩——抑制振荡，加速收敛。二者共同构成“电子弹簧-阻尼器”。
+
+\subsubsection{速度环 PI 控制}
+
+速度环采用增量式 PI 控制，以左右编码器脉冲和作为速度反馈（目标速度为 0，即保持静止），输出为期望倾角偏移量，叠加至直立环。其增量式算法为：
+
+\begin{equation}
+  \begin{aligned}
+    e[k] &= 0 - (N_L[k] + N_R[k]) \\
+    I[k] &= I[k-1] + e[k] \cdot T_s \\
+    u_{\text{vel}}[k] &= -K_p^{\text{vel}} \cdot e[k]
+                       - K_i^{\text{vel}} \cdot I[k]
+  \end{aligned}
+\end{equation}
+
+式中 $N_L$、$N_R$ 分别为左右编码器在 5\,ms 内的脉冲增量（带方向符号），$e[k]$ 为速度偏差，$I[k]$ 为速度偏差积分。积分项 $I[k]$ 持续累加直至速度偏差归零，消除纯比例控制下的稳态位移漂移。
+
+积分限幅（$|I| \leq 10000$）防止积分饱和导致控制振荡，当 \texttt{stopFlag = 1} 时将积分项清零。
+
+\subsubsection{串级 PID 耦合逻辑}
+
+串级结构中，速度环输出 $u_{\text{vel}}$ 作为角度补偿叠加至直立环输出：
+
+\begin{equation}
+  \text{Motor\_Pwm} = u_{\text{bal}} + u_{\text{vel}}
+\end{equation}
+
+耦合的物理意义：当系统检测到车轮向前移动（速度偏差为正），速度环产生负向的角度补偿（期望角向后），使直立环产生向后 PWM 分量，抑制前移趋势。最终电机 PWM 经限幅（$\pm$6900）后输出，确保在 TB6612 与电机的安全工作范围。
+
+\subsection{数据滤波技术}
+
+电池电压采集采用滑动平均滤波（移动平均滤波器）。在 \texttt{readVolt(cnt)} 函数中，每次 5\,ms 中断调用时采集一次 ADC 原始值，累加 \texttt{cnt} 次（cnt = 10，即每 10 个中断周期合计 50\,ms）后取均值，刷新全局变量 \texttt{Voltage}。该滤波器对随机噪声的衰减为 $\sqrt{\text{cnt}}$ 倍（约 9.5\,dB），有效消除了 ADC 量化噪声与电源纹波干扰。
+
+\subsection{低压保护机制}
+
+系统设置两级电压保护策略：
+
+\begin{enumerate}
+  \item \textbf{低电量告警}（主循环）：当电池电压 $<$ 10.0\,V 时（对应 3S 锂电池单节电压约 3.33\,V），通过串口 printf 输出电压过低警告并自动停机。
+  \item \textbf{硬关断保护}（中断内 Turn\_Off 函数）：当电池电压 $<$ 7.0\,V 时，中断内强制关闭电机 PWM 输出，防止锂电池过放损坏。
+\end{enumerate}
+
+两级保护的设置考虑了电池放电特性——3S 锂电池在 10.0\,V 以下进入放电拐点区，宜尽快停机；7.0\,V 以下则为锂电池的极限安全阈值。
+
+\section{关键程序设计与解读}
+
+\subsection{MPU6050 外部中断服务函数}
+
+该 ISR 是系统控制周期的核心调度器，实现 5\,ms 传感器采样与 10\,ms 控制运算的时隙分配（见文件 \texttt{Drivers/BSP/EXTI/exti.c}）：
+
+\begin{lstlisting}[
+  language   = C,
+  caption    = {MPU6050 外部中断服务函数与控制主循环},
+  label      = {code:isr},
+  title      = {\small Drivers/BSP/EXTI/exti.c — HAL\_GPIO\_EXTI\_Callback},
+]
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    switch(GPIO_Pin)
+    {
+        case MPU6050_EXTI_Pin:          // 每 5ms 一次中断 (200Hz)
+            tenMsFlag = !tenMsFlag;     // 10ms 到达标记
+            readVel();                  // 读取编码器速度 (cnt/5ms)
+            readMpu();                  // 读取 DMP 姿态 (pit, gyro)
+            if(tenMsFlag)               // 奇数序中断：只采样,不控制
+            {
+                readVolt(10);           // 电池电压滑动平均
+                return;                 // 退出，等待下一次中断
+            }
+            // ---- 10ms 控制周期 (偶数序中断) ----
+            Balance_Pwm  = Balance(-pit, -gyro[0]);
+            Velocity_Pwm = Velocity(Encoder_Left, Encoder_Right);
+            Motor_Left   = Balance_Pwm + Velocity_Pwm;
+            Motor_Right  = Balance_Pwm + Velocity_Pwm;
+            Motor_Left   = PWM_Limit(Motor_Left,  6900, -6900);
+            Motor_Right  = PWM_Limit(Motor_Right, 6900, -6900);
+            if(!Turn_Off())             // 安全检查
+                motorMove(Motor_Left, Motor_Right);
+            break;
+    }
+}
+\end{lstlisting}
+
+\textbf{代码解读}：\texttt{tenMsFlag} 在每个 5\,ms 中断中翻转，实现 200\,Hz $\to$ 100\,Hz 的 2 分频。当 \texttt{tenMsFlag = 0} 时（5\,ms 任务）：仅执行传感器采样；当 \texttt{tenMsFlag = 1} 时（10\,ms 任务）：额外执行 PID 计算与 PWM 输出。这种双频任务调度方法在单个物理中断源中实现了两种不同频率的操作，代码量最小、开销最低。
+
+\subsection{直立环 PD 控制函数}
+
+\begin{lstlisting}[
+  language   = C,
+  caption    = {直立环 PD 控制函数},
+  label      = {code:balance},
+  title      = {\small Drivers/BSP/EXTI/exti.c — Balance},
+]
+int Balance(float Angle, float Gyro)
+{
+    // PD 控制: Kp * 角度 + Kd * 角速度
+    int balance = Balance_Kp * Angle + Gyro * Balance_Kd;
+    return balance;
+}
+// 参数: Balance_Kp = 400, Balance_Kd = 2.0
+\end{lstlisting}
+
+\textbf{代码解读}：该函数实现了式(4-5)的核心计算。输入 \texttt{Angle} 为取负后的俯仰角（\texttt{-pit}），\texttt{Gyro} 为取负后的 x 轴角速度 \texttt{-gyro[0]}。符号取反操作将传感器坐标系转换为控制坐标系——前倾时角度为负（传感器原值），取负后为正，Balance 函数输出正值驱动车轮前移以恢复平衡。
+
+参数 \texttt{Balance\_Kp = 400} 决定回复力矩的强度：前倾 1° 约产生 400 单位 PWM 回复力。\texttt{Balance\_Kd = 2.0} 为阻尼项系数：角速度 1°/s 时产生 2 单位 PWM 阻尼力矩。
+
+\subsection{速度环增量 PI 控制函数}
+
+\begin{lstlisting}[
+  language   = C,
+  caption    = {速度环增量 PI 控制函数},
+  label      = {code:velocity},
+  title      = {\small Drivers/BSP/EXTI/exti.c — Velocity},
+]
+int Velocity(int encoder_left, int encoder_right)
+{
+    static float velocity, Encoder_bias, Encoder_Integral;
+    Encoder_bias = 0 - (encoder_left + encoder_right);
+    Encoder_Integral += Encoder_bias;
+    // 积分限幅
+    if(Encoder_Integral > 10000)  Encoder_Integral = 10000;
+    if(Encoder_Integral < -10000) Encoder_Integral = -10000;
+    // PI 速度控制
+    velocity = -Encoder_bias * Velocity_Kp
+             - Encoder_Integral * Velocity_Ki;
+    // 电机关闭后清除积分
+    if(stopFlag == 1) Encoder_Integral = 0;
+    return velocity;
+}
+// 参数: Velocity_Kp = 160, Velocity_Ki = 0.8
+\end{lstlisting}
+
+\textbf{代码解读}：该函数实现了式(4-6)的离散化 PI 控制。\texttt{Encoder\_bias} 为左右编码器 5\,ms 脉冲增值之和（符号化），目标速度为 0，故偏差即为编码器读数的相反数。\texttt{Encoder\_Integral} 为速度偏差的积分（累加值），受 10000 限幅保护。比例项 $K_p \cdot (-e)$ 与积分项 $K_i \cdot (-\int e)$ 叠加得到 \texttt{velocity}（即期望倾角偏移量）。
+
+当按键触发停机（\texttt{stopFlag = 1}）时，积分项清零——防止重新启动时积分初值引起的启动冲击。
+
+\subsection{定时器编码器模式配置}
+
+编码器模式下 TIM3 / TIM4 的配置关键步骤（见文件 \texttt{Drivers/BSP/ENCODER/encoder.c}）：
+
+\begin{lstlisting}[
+  language   = C,
+  caption    = {编码器模式初始化关键代码（以 TIM3 左编码器为例）},
+  label      = {code:encoder},
+  title      = {\small Drivers/BSP/ENCODER/encoder.c — leftEncoderInit},
+]
+void leftEncoderInit(void)
+{
+    TIM_Encoder_InitTypeDef sEncoderConfig;
+    // 时钟使能与 GPIO 配置 (PA6/PA7 — AF 推挽) ...
+    htim3.Instance       = TIM3;
+    htim3.Init.Period    = 65535;        // 16 位满量程
+    htim3.Init.Prescaler = 0;
+    htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+    // 编码器模式: TI1 和 TI2 均计数 (4 倍频)
+    sEncoderConfig.EncoderMode = TIM_ENCODERMODE_TI12;
+    sEncoderConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
+    sEncoderConfig.IC2Polarity = TIM_ICPOLARITY_RISING;
+    HAL_TIM_Encoder_Init(&htim3, &sEncoderConfig);
+    HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
+}
+\end{lstlisting}
+
+\textbf{代码解读}：\texttt{TIM\_ENCODERMODE\_TI12} 使能 TI1 与 TI2 双通道计数（即 4 倍频），在 A 相与 B 相的每个边沿均触发计数。计数器方向由硬件自动判断：A 相超前 B 相时向上计数（正转），反之为向下计数（反转）。定时器周期设为 65535（16 位满量程），足以容纳 5\,ms 内的编码器脉冲增量。读取时调用 \texttt{\_\_HAL\_TIM\_GET\_COUNTER()} 获取当前值并清零计数器，实现差分读取。
+
+\subsection{电机驱动输出函数}
+
+\begin{lstlisting}[
+  language   = C,
+  caption    = {电机驱动输出函数},
+  label      = {code:motor},
+  title      = {\small Drivers/BSP/MOTOR/motor.c — motorMove},
+]
+void motorMove(int leftPwm, int rightPwm)
+{
+    // 左轮控制
+    if(leftPwm > 0) {                     // 前进
+        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);   // A_IN1
+        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_15, GPIO_PIN_RESET); // A_IN2
+    } else if(leftPwm < 0) {              // 后退
+        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_15, GPIO_PIN_SET);
+    } else {                              // 停止
+        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_15, GPIO_PIN_RESET);
+    }
+    __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, abs(leftPwm));
+    // 右轮同理 (TIM1_CH4, PB13/PB12) ...
+}
+\end{lstlisting}
+
+\textbf{代码解读}：\texttt{motorMove()} 函数根据 PWM 值符号判断转向需求——正值前进（IN1 高/IN2 低）、负值后退（IN1 低/IN2 高）、零值滑行停止（IN1 低/IN2 低）。通过 \texttt{\_\_HAL\_TIM\_SET\_COMPARE()} 宏直接修改 TIM1 的 CCR 比较寄存器，实现 PWM 占空比的实时更新。
+
+\subsection{电压采集与滤波函数}
+
+\begin{lstlisting}[
+  language   = C,
+  caption    = {电压采集与滑动平均滤波},
+  label      = {code:adc},
+  title      = {\small Drivers/BSP/EXTI/exti.c — readVolt},
+]
+void readVolt(uint8_t cnt)               // cnt = 10
+{
+    Voltage_Temp = Get_battery_volt();   // ADC 采样 + 分压换算
+    Voltage_Count++;
+    Voltage_All += Voltage_Temp;         // 累加
+    if(Voltage_Count == cnt)             // 达到采样次数
+    {
+        Voltage      = Voltage_All / cnt;// 滑动平均
+        Voltage_All  = 0;                // 归零准备下一轮
+        Voltage_Count = 0;
+    }
+}
+\end{lstlisting}
+
+\textbf{代码解读}：\texttt{Get\_battery\_volt()} 在 ADC 驱动层实现，完成 ADC 采样、12 位量化值读取及 11:1 分压逆换算至实际电压值（mV 单位）。\texttt{readVolt()} 在每次 5\,ms 中断中被调用（随 \texttt{tenMsFlag == 1} 路径），每调用一次累加一次采样值，10 次后（合计 50\,ms）取均值，相当于一个长度为 10 的滑动平均滤波器（移动窗口无重叠采样）。
+
+% =============================================================================
+%  第 5 章  系统调试过程
+% =============================================================================
+\chapter{系统调试过程}
+
+\section{分模块调试}
+
+调试策略采用自底向上的模块化方法——先逐一验证各底层外设的基本功能，确认硬件与驱动正确后，再进行系统级联调。
+
+\subsection{基础外设调试}
+
+\subsubsection{GPIO 输出测试（LED）}
+
+\begin{itemize}
+  \item \textbf{测试方法}：编写测试程序，以 500\,ms 周期翻转 PA4（LED）输出电平。
+  \item \textbf{验证标准}：LED 以 1\,Hz 频率闪烁。
+  \item \textbf{调试现象}：LED 正常闪烁，确认 GPIO 推挽输出配置正确。
+\end{itemize}
+
+\subsubsection{按键输入测试}
+
+\begin{itemize}
+  \item \textbf{测试方法}：配置 PA5 为中断输入（下降沿触发），在 ISR 中翻转 LED 状态。
+  \item \textbf{验证标准}：每次按下 KEY0，LED 状态切换一次。
+  \item \textbf{调试现象}：按键响应灵敏，无抖动误触发（硬件消抖 \texttt{\_\_HAL\_GPIO\_EXTI\_CLEAR\_IT} 在 ISR 末尾追加了一次中断标志清除，有效抑制了抖动二次中断）。
+\end{itemize}
+
+\subsubsection{串口通信测试}
+
+\begin{itemize}
+  \item \textbf{测试方法}：USART1 配置为 115200\,bps，主循环中周期性调用 \verb|printf("Hello\r\n")|。
+  \item \textbf{验证标准}：PC 端串口助手（SSCOM）正确接收显示，无乱码。
+  \item \textbf{调试现象}：波特率匹配，数据收发正常。
+\end{itemize}
+
+\subsubsection{OLED 显示测试}
+
+\begin{itemize}
+  \item \textbf{测试方法}：调用 \texttt{oled\_show\_string()} 在指定坐标显示字符串与数值。
+  \item \textbf{验证标准}：屏幕清晰显示中英文字符，无花屏、无错位。
+  \item \textbf{调试现象}：显示正常。需注意 OLED 初始化后须调用 \texttt{oled\_refresh\_gram()} 将显存数据刷新至屏幕。
+\end{itemize}
+
+\subsection{电机驱动调试}
+
+\begin{itemize}
+  \item \textbf{测试方法}：编写测试程序输出固定占空比（正/负各 3000）的 PWM 信号至左右电机。
+  \item \textbf{验证标准}：电机正转、反转、停止功能正常；两轮转速可通过调节占空比连续变化。
+  \item \textbf{调试现象}：初始测试时发现单侧电机不转，经排查为对应电机驱动 IN1/IN2 引脚 GPIO 时钟未使能——在 \texttt{motorInit()} 中补全 \texttt{\_\_HAL\_RCC\_GPIOB\_CLK\_ENABLE()} 后解决。
+\end{itemize}
+
+\subsection{编码器测速调试}
+
+\begin{itemize}
+  \item \textbf{测试方法}：手动转动车轮，在 5\,ms 中断中通过串口向上位机发送 \texttt{Encoder\_Left} 和 \texttt{Encoder\_Right} 的值。
+  \item \textbf{验证标准}：正转时编码器计数为正，反转时为负；转速越快计数值越大；停止时读数为 0。
+  \item \textbf{调试现象}：初始调试时右侧编码器读数极性反向（正转时读数为负）。原因：右侧电机安装方向导致 AB 相物理相位差与左侧相反。修正措施：在 \texttt{readVel()} 中对右编码器返回值额外取负号（统一 \texttt{Encoder\_Right = -Read\_Encoder(4)}），确保两侧编码器读数的符号语义一致。
+\end{itemize}
+
+\subsection{传感器调试}
+
+\begin{itemize}
+  \item \textbf{测试方法}：运行 DMP 初始化后，通过 OLED 和串口实时输出 pitch、roll、yaw 角度与 gyro 角速度，手动倾斜小车观察数值变化。
+  \item \textbf{验证标准}：
+    \begin{enumerate}
+      \item 小车置于水平面时，pitch 与 roll 接近 0°（$\left| \theta \right| < 2^{\circ}$）；
+      \item 前倾时 pitch 读数变化方向正确（传感器局部坐标系下前倾为负值）；
+      \item gyro[0] 在绕 pitch 轴旋转时输出合理的角速度值，动态响应灵敏；
+      \item DMP 数据更新频率稳定在 200\,Hz。
+    \end{enumerate}
+  \item \textbf{调试现象}：初次上电后 DMP 初始化偶尔失败，返回错误码。原因：MPU6050 上电稳定时间不足——在 \texttt{atk\_ms6050\_dmp\_init()} 启动前增加 200\,ms 延时后解决。
+\end{itemize}
+
+\subsection{电压采集调试}
+
+\begin{itemize}
+  \item \textbf{测试方法}：万用表测量电池实际电压，与 OLED 显示的 \texttt{Voltage}（mV 单位）对比。
+  \item \textbf{验证标准}：读数误差在 $\pm 3\%$ 以内。
+  \item \textbf{调试现象}：初始 ADC 读取值偏大约 10\%。经排查，分压电阻实际值存在偏差（标称 100\,k$\Omega$/10\,k$\Omega$，实际为 98.7\,k$\Omega$/9.82\,k$\Omega$），按实际阻值修正换算系数后精度满足要求。
+\end{itemize}
+
+\section{系统联调与参数整定}
+
+\subsection{调参原则}
+
+串级 PID 参数整定遵循“先内环后外环、先比例后微分/积分”的基本原则：
+
+\begin{enumerate}
+  \item 先调试内环（直立 PD）至姿态稳定，再调试外环（速度 PI）至位置收敛。
+  \item 在每个环内，先以单纯比例控制将系统调至临界等幅振荡，记录临界增益与周期；再根据临界值计算微分/积分参数。
+  \item 最终参数取临界值的 0.6 倍（经验值），留足增益裕度。
+\end{enumerate}
+
+\subsection{直立环 PD 参数整定}
+
+\subsubsection{整定步骤}
+
+\begin{enumerate}
+  \item 将 \texttt{Velocity\_Kp} 与 \texttt{Velocity\_Ki} 均设为 0，暂时禁用速度环。
+  \item 将 \texttt{Balance\_Kd} 设为 0，\texttt{Balance\_Kp} 从 0 逐步增大（步长 50），观察车体响应。
+  \item 当 \texttt{Balance\_Kp} 增大至约 670 时，车体出现低频等幅振荡（周期约 150\,ms）——该值即为直立环的比例临界增益 $K_{p,\text{crit}}^{\text{bal}}$。
+  \item 将 \texttt{Balance\_Kp} 暂设为 400（$K_{p,\text{crit}}$ 的 0.6 倍），逐步增大 \texttt{Balance\_Kd}（步长 0.2），观察车体响应。
+  \item 当 \texttt{Balance\_Kd} 增大至约 3.3 时，车轮出现高频抖动——该值即为直立环的微分临界增益。
+  \item 最终 \texttt{Balance\_Kd} 取 2.0（临界值的 0.6 倍）。
+\end{enumerate}
+
+\subsubsection{调试现象分析}
+
+\begin{itemize}
+  \item \textbf{Kp 过小（$<$ 200）}：车体软弱无力，产生倾角后回正速度慢，轻微推动即倾倒。
+  \item \textbf{Kp 适中（200–500）}：车体可保持直立，有适当刚性。
+  \item \textbf{Kp 过大（$>$ 670）}：车体出现低频振荡，PWM 输出反复正反转切换，电机发热加剧。
+  \item \textbf{Kd 过小}：姿态恢复过程过冲大，收敛慢。
+  \item \textbf{Kd 适中（1.5–2.5）}：抑制超调效果明显，平衡恢复平稳。
+  \item \textbf{Kd 过大（$>$ 3.3）}：车轮出现高频抖动（$\sim$50\,Hz），因微分项放大了编码器/陀螺仪的量化噪声。
+\end{itemize}
+
+最终取值 \texttt{Balance\_Kp = 400}、\texttt{Balance\_Kd = 2.0}，在姿态刚性与噪声抑制之间达到了良好平衡。
+
+\subsection{速度环 PI 参数整定}
+
+\subsubsection{整定步骤}
+
+\begin{enumerate}
+  \item 保持直立环参数不变（Kp = 400，Kd = 2.0）。
+  \item 将 \texttt{Velocity\_Kp} 从 0 逐步增大（步长 20），\texttt{Velocity\_Ki} 同步设为 Kp 的 1/200（即 Kp/200）。
+  \item 每次调整后，用手轻推小车测试其恢复能力——理想状态为小车受扰后无明显漂移，原地恢复平衡。
+  \item 当 \texttt{Velocity\_Kp} 约 160、\texttt{Velocity\_Ki} 约 0.8 时，小车实现了原地站稳、推扰后迅速恢复的预期效果。
+\end{enumerate}
+
+\subsubsection{调试现象分析}
+
+\begin{itemize}
+  \item \textbf{Kp 过小}：速度环响应迟钝，小车持续朝一个方向缓慢漂移。
+  \item \textbf{Kp 过大}：速度环过强，小车朝反方向加速再反向，出现前后摆动。
+  \item \textbf{Ki 过小}：稳态位移误差无法消除，小车站立位置随时间缓慢漂移。
+  \item \textbf{Ki 过大}：积分饱和导致控制振荡，甚至大于平衡能力。
+\end{itemize}
+
+最终参数：\texttt{Velocity\_Kp = 160}、\texttt{Velocity\_Ki = 0.8}。
+
+\subsection{功能验证}
+
+\begin{enumerate}
+  \item \textbf{稳态位移测试}：小车置于水平地面，上电后经过约 2\,s 进入稳态，以初始位置为参考点在 60\,s 后测量轮向位移。实测漂移量约 3.2\,cm，满足目标 $\leq 5$\,cm 的要求。
+  \item \textbf{抗干扰测试}：以手指轻推小车产生约 8° 摆幅后释放，小车在约 1.2\,s 内恢复至平衡状态无超调，满足 $\leq 10^{\circ}$ 可恢复目标。
+  \item \textbf{低压保护测试}：使用可调直流电源替代电池供电，逐渐降低输入电压至 7.0\,V 以下，验证 \texttt{Turn\_Off()} 函数正确关闭电机输出。
+\end{enumerate}
+
+\section{典型问题与解决方法}
+
+\subsection{问题一：小车同向倾倒，无法直立}
+
+\begin{description}
+  \item[现象描述] 上电初始化后，车体立即向同一方向加速倾倒，电机虽转动但方向错误——车体前倾时电机反而向后加速，加剧倾倒。
+  \item[原因分析] 姿态传感器坐标系与控制坐标系符号不匹配——MPU6050 DMP 输出的 pitch 角在前倾时为负值，而 Balance 函数期望前倾时输入正值。符号取反操作（\texttt{-pit}）遗漏导致了正反馈效应。
+  \item[解决措施] 在 Balance 调用处将参数改为 \texttt{Balance(-pit, -gyro[0])}，确保控制极性正确。
+\end{description}
+
+\subsection{问题二：车体高频抖动}
+
+\begin{description}
+  \item[现象描述] 小车虽可保持大致直立状态，但车轮持续发出高频（约 40–50\,Hz）振动噪音，电机发热明显。
+  \item[原因分析] Balance\_Kd 参数设置偏大（初始值设为 5.0），微分项将陀螺仪量化噪声放大了过多倍。
+  \item[解决措施] 按上文 5.2.2 节所述步骤重新整定，将 Balance\_Kd 从 5.0 降至 2.0，高频抖动消失。
+\end{description}
+
+\subsection{问题三：小车缓慢漂移}
+
+\begin{description}
+  \item[现象描述] 小车直立稳定，但随时间推移缓慢朝一个方向漂移，数秒后偏移数十厘米。
+  \item[原因分析] 仅使用直立 PD 控制（速度环未开启或参数偏小）时，系统无位置误差校正能力——零倾角静止状态对应唯一的 PWM 输出，但电机死区、机械不对称性等因素使零倾角状态无法保证零速度。
+  \item[解决措施] 加入速度 PI 环——编码器检测到车轮移动趋势后，PI 控制器产生角度偏移抵消该趋势，使稳态位置误差收敛至零。
+\end{description}
+
+\subsection{问题四：编码器方向反向}
+
+\begin{description}
+  \item[现象描述] 当小车受推前倾、电机输出正向 PWM 驱动前移时，串口显示的编码器读数为负值（预期为正），导致速度环产生错误的正反馈。
+  \item[原因分析] 右侧电机的物理安装方向与左侧相反——编码器的 A 相与 B 相接线在 PCB 布线或接插件中对调，导致 AB 相相对相位翻转，硬件判定方向取反。
+  \item[解决措施] 在 \texttt{readVel()} 函数中对右编码器返回值统一取负：\\[2pt]
+      \texttt{Encoder\_Right = -Read\_Encoder(4)}，\\[2pt]
+      使两侧编码器读数的方向语义一致。
+\end{description}
+
+\subsection{问题五：OLED 显示乱码}
+
+\begin{description}
+  \item[现象描述] OLED 屏幕上部分字符无法正常显示，出现随机点阵或无规则图案。
+  \item[原因分析] OLED 软件 SPI 时序被其他中断打断，导致传输不完整——MPU6050 200\,Hz 中断在 OLED 刷新期间抢占 CPU，SPI 软件模拟时序中断裂。
+  \item[解决措施] 将 OLED 刷新操作从中断内移至主循环（while(1) 中调用 \texttt{oledShow()}），利用中断与主循环的自然优先级隔离，避免刷新过程被高优先级中断打断。
+\end{description}
+
+% =============================================================================
+%  第 6 章  项目总结
+% =============================================================================
+\chapter{项目总结}
+
+\section{项目完成情况}
+
+对照第 1 章所述设计目标，各项目标的达成情况量化总结如表 \ref{tbl:completion} 所示。
+
+\begin{table}[H]
+  \centering
+  \caption{项目目标达成情况汇总}
+  \label{tbl:completion}
+  \begin{tabular}{p{3.5cm}ccp{3.5cm}}
+    \toprule
+    \textbf{设计目标} & \textbf{目标值} & \textbf{实测值} & \textbf{达成情况} \\
+    \midrule
+    直立稳定             & 连续站立      & 连续站立       & $\surd$ 达成 \\
+    稳态位移误差         & $\leq$ 5\,cm  & $\approx$ 3.2\,cm & $\surd$ 达成 \\
+    抗干扰恢复           & $\leq 10^{\circ}$ 可恢复 & $\sim 8^{\circ}$ 1.2\,s 恢复 & $\surd$ 达成 \\
+    低压保护             & $<$ 10\,V 停机 & 阈值触发正确   & $\surd$ 达成 \\
+    OLED 状态显示        & 实时刷新      & 100\,ms 刷新速率 & $\surd$ 达成 \\
+    虚拟示波器 DataScope & 串口波形显示  & 3 通道波形正常  & $\surd$ 达成 \\
+    按键启停             & 触发可靠      & 可靠            & $\surd$ 达成 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+所有基础设计目标与扩展设计目标均已达成，系统运行稳定、功能完整。
+
+\section{项目收获}
+
+\subsection{硬件认知}
+
+通过本项目，对 ARM Cortex-M3 微控制器的片上外设资源（GPIO、TIM、I2C、ADC、USART、NVIC）有了系统性理解——不仅掌握了各外设的初始化配置方法，更深入理解了 TIM 定时器在 PWM 生成（TIM1 高级定时器）与编码器接口（TIM3/TIM4 编码器模式）两种截然不同应用场景下的配置差异与内在联系。
+
+\subsection{嵌入式 HAL 库开发}
+
+系统性地实践了 STM32 HAL 库的程序架构——HAL 初始化的标准流程、外设句柄（handle）的设计思想、中断回调机制（\texttt{HAL\_GPIO\_EXTI\_Callback}）的使用方式，以及 HAL 库与传统标准外设库（SPL）在编程范式上的区别。
+
+\subsection{控制算法理解}
+
+将经典控制理论中的 PID 算法从数学模型落实为嵌入式 C 代码，理解了两个关键工程问题：(1) 连续控制律到离散时间实现的转换——采样周期 $T_s$ 对算法稳定性的影响；(2) 积分限幅、PWM 输出限幅等工程约束在代码层面的实现方式。串级 PID 的调参过程加深了对控制系统频域特性（带宽、相位裕度）与物理系统时域表现（振荡、收敛速度）之间关系的直观理解。
+
+\subsection{工程调试思维}
+
+从模块化验证到系统联调的渐进式调试方法，从问题现象反推根因的诊断路径，以及参数整定的系统性方法——这些工程调试思维是本项目最具价值的核心收获。典型的编码器极性反向、DMP 初始化时序、控制参数振荡等问题及其解决过程，构成了嵌入式系统调试的完整方法论训练。
+
+\section{不足与展望}
+
+\subsection{当前局限性}
+
+\begin{enumerate}
+  \item \textbf{无转向控制功能}：目前仅实现原地平衡（零速度控制），缺乏转向控制通道——YAW 角的闭环控制尚未实现，小车无法自主导航。
+  \item \textbf{PID 参数离线整定}：参数整定依赖手动试凑，无在线自适应或自整定功能。不同地面（地毯 vs 硬地）下最优参数不同，无法自动切换。
+  \item \textbf{上位机界面简陋}：DataScope 仅能显示 3 通道原始波形，无法进行在线参数调整——修改 PID 参数需重新编译烧录。
+  \item \textbf{电压保护两级阈值不一致}：主循环 10\,V 告警与 ISR 内 7\,V 硬关断的阈值关系在代码中缺乏统一常量定义，容易维护遗漏。
+\end{enumerate}
+
+\subsection{后续优化方向}
+
+\begin{enumerate}
+  \item \textbf{转向控制}：在串级 PID 结构中添加第三环——转向环（P 或 PD 控制），以 YAW 角速度为反馈量，左右轮施加差速 PWM（左轮加 $\Delta$PWM、右轮减 $\Delta$PWM）实现差速转向。
+  \item \textbf{蓝牙遥控}：集成 HC-05/HC-06 蓝牙模块，实现手机 APP 对小车的运动方向（前进/后退/左转/右转）遥控。
+  \item \textbf{上位机调参}：开发基于 Python/PyQt 的上位机调参工具，可通过串口实时读取与修改 PID 参数，支持数据波形绘制与参数存储。
+  \item \textbf{自适应控制}：引入模糊 PID 或模型参考自适应控制（MRAC），使控制器参数能随负载变化（如配重或电池电量）自动调整。
+  \item \textbf{CMSIS-DSP 优化}：将浮点 PID 运算迁移至 CMSIS-DSP 定点数库，减少浮点运算开销，提高控制周期利用率。
+\end{enumerate}
+
+\section{演示视频说明}
+
+本项目演示视频占总报告成绩的 40\%，以下为视频拍摄与内容要求：
+
+\begin{enumerate}
+  \item \textbf{时长要求}：不少于 3 分钟，横屏拍摄（16:9 比例）。
+  \item \textbf{内容结构}：
+    \begin{enumerate}
+      \item 视频开头——作者出镜，展示校园卡/学生证，口述姓名、学号、项目名称。
+      \item 功能演示——对照项目目标列表逐项演示：上电直立平衡、外力干扰下的恢复能力（约 10° 推扰）、OLED 实时数据显示（学号特写）、按键启停功能、串口 DataScope 波形显示。
+      \item 总结感言——阐述项目完成情况、主要收获及改进建议。
+    \end{enumerate}
+  \item \textbf{拍摄建议}：选择空旷、光线充足的平整地面拍摄，确保画面清晰、解说音量大且清楚。拍摄角度以侧面为主，兼顾 OLED 屏幕特写与车身整体动态。
+\end{enumerate}
+
+% #############################################################################
+%                            参 考 文 献
+% #############################################################################
+\begin{thebibliography}{99}
+
+\bibitem{stm32f1ref}
+STMicroelectronics, \textit{RM0008: STM32F10xxx Reference Manual}, Rev 20, 2021.
+
+\bibitem{mpu6050ds}
+InvenSense Inc., \textit{MPU-6000 and MPU-6050 Product Specification}, PS-MPU-6000A-00, Rev 3.4, 2013.
+
+\bibitem{mpu6050dmp}
+InvenSense Inc., \textit{MPU-6000/MPU-6050 Register Map and Descriptions}, RM-MPU-6000A-00, Rev 4.2, 2013.
+
+\bibitem{tb6612}
+Toshiba Corporation, \textit{TB6612FNG Dual-DC-Motor Driver IC Datasheet}, 2014.
+
+\bibitem{ssd1306}
+Solomon Systech, \textit{SSD1306: 128$\times$64 Dot Matrix OLED/PLED Segment/Common Driver with Controller}, Rev 2.2, 2012.
+
+\bibitem{alientek_f103}
+正点原子（ALIENTEK）, \textit{STM32F1 开发指南-HAL 库版本}, V1.0, 2021.
+
+\bibitem{astrom_pid}
+\AA{}str\"{o}m K J, H\"{a}gglund T, \textit{PID Controllers: Theory, Design, and Tuning}, 2nd ed. Instrument Society of America, 1995.
+
+\bibitem{inverted_pendulum}
+Boubaker O, \textit{The Inverted Pendulum in Control Theory and Robotics: From Theory to New Innovations}. IET, 2017.
+
+\end{thebibliography}
+
+\end{document}

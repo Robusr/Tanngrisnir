@@ -1,0 +1,88 @@
+\contentsline {chapter}{\numberline {第一章\hspace {.3em}}项目概述与目标}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}项目背景}{1}{section.1.1}%
+\contentsline {section}{\numberline {1.2}基础设计目标}{1}{section.1.2}%
+\contentsline {section}{\numberline {1.3}扩展设计目标}{2}{section.1.3}%
+\contentsline {section}{\numberline {1.4}报告整体结构说明}{2}{section.1.4}%
+\contentsline {chapter}{\numberline {第二章\hspace {.3em}}项目方案}{3}{chapter.2}%
+\contentsline {section}{\numberline {2.1}整体设计思路}{3}{section.2.1}%
+\contentsline {section}{\numberline {2.2}系统工作原理}{3}{section.2.2}%
+\contentsline {section}{\numberline {2.3}方案选型论证}{4}{section.2.3}%
+\contentsline {subsection}{\numberline {2.3.1}主控芯片：STM32F103C8T6}{4}{subsection.2.3.1}%
+\contentsline {subsection}{\numberline {2.3.2}姿态传感器：MPU6050 + DMP}{4}{subsection.2.3.2}%
+\contentsline {subsection}{\numberline {2.3.3}电机驱动：TB6612}{5}{subsection.2.3.3}%
+\contentsline {subsection}{\numberline {2.3.4}控制算法：串级 PID}{5}{subsection.2.3.4}%
+\contentsline {chapter}{\numberline {第三章\hspace {.3em}}系统硬件及软件架构}{6}{chapter.3}%
+\contentsline {section}{\numberline {3.1}系统硬件架构}{6}{section.3.1}%
+\contentsline {subsection}{\numberline {3.1.1}硬件整体框图}{6}{subsection.3.1.1}%
+\contentsline {subsection}{\numberline {3.1.2}各模块详细说明}{6}{subsection.3.1.2}%
+\contentsline {subsubsection}{主控模块}{6}{subsubsection*.4}%
+\contentsline {subsubsection}{电机与驱动模块}{7}{subsubsection*.6}%
+\contentsline {subsubsection}{姿态传感模块}{7}{subsubsection*.8}%
+\contentsline {subsubsection}{电源模块}{8}{subsubsection*.9}%
+\contentsline {subsubsection}{人机交互模块}{8}{subsubsection*.10}%
+\contentsline {subsection}{\numberline {3.1.3}硬件引脚映射表}{8}{subsection.3.1.3}%
+\contentsline {section}{\numberline {3.2}系统软件架构}{9}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}软件设计思想}{9}{subsection.3.2.1}%
+\contentsline {subsection}{\numberline {3.2.2}主程序总流程图}{10}{subsection.3.2.2}%
+\contentsline {subsection}{\numberline {3.2.3}软件分层结构}{11}{subsection.3.2.3}%
+\contentsline {subsection}{\numberline {3.2.4}核心中断流程图}{11}{subsection.3.2.4}%
+\contentsline {subsection}{\numberline {3.2.5}系统初始化流程}{12}{subsection.3.2.5}%
+\contentsline {chapter}{\numberline {第四章\hspace {.3em}}关键技术及程序设计说明}{14}{chapter.4}%
+\contentsline {section}{\numberline {4.1}核心关键技术}{14}{section.4.1}%
+\contentsline {subsection}{\numberline {4.1.1}姿态解算技术}{14}{subsection.4.1.1}%
+\contentsline {subsection}{\numberline {4.1.2}电机调速技术}{14}{subsection.4.1.2}%
+\contentsline {subsubsection}{PWM 脉冲宽度调制原理}{14}{subsubsection*.15}%
+\contentsline {subsubsection}{TB6612 正反转控制逻辑}{15}{subsubsection*.16}%
+\contentsline {subsection}{\numberline {4.1.3}编码器测速技术}{15}{subsection.4.1.3}%
+\contentsline {subsubsection}{正交编码器 AB 相工作原理}{15}{subsubsection*.17}%
+\contentsline {subsubsection}{M 法测速}{15}{subsubsection*.18}%
+\contentsline {subsection}{\numberline {4.1.4}闭环控制技术}{16}{subsection.4.1.4}%
+\contentsline {subsubsection}{直立环 PD 控制}{16}{subsubsection*.19}%
+\contentsline {subsubsection}{速度环 PI 控制}{16}{subsubsection*.20}%
+\contentsline {subsubsection}{串级 PID 耦合逻辑}{16}{subsubsection*.21}%
+\contentsline {subsection}{\numberline {4.1.5}数据滤波技术}{17}{subsection.4.1.5}%
+\contentsline {subsection}{\numberline {4.1.6}低压保护机制}{17}{subsection.4.1.6}%
+\contentsline {section}{\numberline {4.2}关键程序设计与解读}{17}{section.4.2}%
+\contentsline {subsection}{\numberline {4.2.1}MPU6050 外部中断服务函数}{17}{subsection.4.2.1}%
+\contentsline {subsection}{\numberline {4.2.2}直立环 PD 控制函数}{18}{subsection.4.2.2}%
+\contentsline {subsection}{\numberline {4.2.3}速度环增量 PI 控制函数}{19}{subsection.4.2.3}%
+\contentsline {subsection}{\numberline {4.2.4}定时器编码器模式配置}{19}{subsection.4.2.4}%
+\contentsline {subsection}{\numberline {4.2.5}电机驱动输出函数}{20}{subsection.4.2.5}%
+\contentsline {subsection}{\numberline {4.2.6}电压采集与滤波函数}{21}{subsection.4.2.6}%
+\contentsline {chapter}{\numberline {第五章\hspace {.3em}}系统调试过程}{22}{chapter.5}%
+\contentsline {section}{\numberline {5.1}分模块调试}{22}{section.5.1}%
+\contentsline {subsection}{\numberline {5.1.1}基础外设调试}{22}{subsection.5.1.1}%
+\contentsline {subsubsection}{GPIO 输出测试（LED）}{22}{subsubsection*.22}%
+\contentsline {subsubsection}{按键输入测试}{22}{subsubsection*.23}%
+\contentsline {subsubsection}{串口通信测试}{22}{subsubsection*.24}%
+\contentsline {subsubsection}{OLED 显示测试}{23}{subsubsection*.25}%
+\contentsline {subsection}{\numberline {5.1.2}电机驱动调试}{23}{subsection.5.1.2}%
+\contentsline {subsection}{\numberline {5.1.3}编码器测速调试}{23}{subsection.5.1.3}%
+\contentsline {subsection}{\numberline {5.1.4}传感器调试}{23}{subsection.5.1.4}%
+\contentsline {subsection}{\numberline {5.1.5}电压采集调试}{24}{subsection.5.1.5}%
+\contentsline {section}{\numberline {5.2}系统联调与参数整定}{24}{section.5.2}%
+\contentsline {subsection}{\numberline {5.2.1}调参原则}{24}{subsection.5.2.1}%
+\contentsline {subsection}{\numberline {5.2.2}直立环 PD 参数整定}{24}{subsection.5.2.2}%
+\contentsline {subsubsection}{整定步骤}{24}{subsubsection*.26}%
+\contentsline {subsubsection}{调试现象分析}{25}{subsubsection*.27}%
+\contentsline {subsection}{\numberline {5.2.3}速度环 PI 参数整定}{25}{subsection.5.2.3}%
+\contentsline {subsubsection}{整定步骤}{25}{subsubsection*.28}%
+\contentsline {subsubsection}{调试现象分析}{26}{subsubsection*.29}%
+\contentsline {subsection}{\numberline {5.2.4}功能验证}{26}{subsection.5.2.4}%
+\contentsline {section}{\numberline {5.3}典型问题与解决方法}{26}{section.5.3}%
+\contentsline {subsection}{\numberline {5.3.1}问题一：小车同向倾倒，无法直立}{26}{subsection.5.3.1}%
+\contentsline {subsection}{\numberline {5.3.2}问题二：车体高频抖动}{27}{subsection.5.3.2}%
+\contentsline {subsection}{\numberline {5.3.3}问题三：小车缓慢漂移}{27}{subsection.5.3.3}%
+\contentsline {subsection}{\numberline {5.3.4}问题四：编码器方向反向}{27}{subsection.5.3.4}%
+\contentsline {subsection}{\numberline {5.3.5}问题五：OLED 显示乱码}{27}{subsection.5.3.5}%
+\contentsline {chapter}{\numberline {第六章\hspace {.3em}}项目总结}{29}{chapter.6}%
+\contentsline {section}{\numberline {6.1}项目完成情况}{29}{section.6.1}%
+\contentsline {section}{\numberline {6.2}项目收获}{29}{section.6.2}%
+\contentsline {subsection}{\numberline {6.2.1}硬件认知}{29}{subsection.6.2.1}%
+\contentsline {subsection}{\numberline {6.2.2}嵌入式 HAL 库开发}{30}{subsection.6.2.2}%
+\contentsline {subsection}{\numberline {6.2.3}控制算法理解}{30}{subsection.6.2.3}%
+\contentsline {subsection}{\numberline {6.2.4}工程调试思维}{30}{subsection.6.2.4}%
+\contentsline {section}{\numberline {6.3}不足与展望}{30}{section.6.3}%
+\contentsline {subsection}{\numberline {6.3.1}当前局限性}{30}{subsection.6.3.1}%
+\contentsline {subsection}{\numberline {6.3.2}后续优化方向}{31}{subsection.6.3.2}%
+\contentsline {section}{\numberline {6.4}演示视频说明}{31}{section.6.4}%
