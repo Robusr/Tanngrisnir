@@ -3,7 +3,7 @@
 [![Platform](https://img.shields.io/badge/platform-STM32F103C8T6-blue)](https://www.st.com/en/microcontrollers-microprocessors/stm32f103c8.html)
 [![IDE](https://img.shields.io/badge/IDE-Keil%20MDK%205-brightgreen)](https://www.keil.com/mdk5/)
 [![HAL](https://img.shields.io/badge/HAL-STM32F1xx-orange)](https://github.com/STMicroelectronics/stm32f1xx_hal_driver)
-[![License](https://img.shields.io/badge/license-BSD--3--Clause-green)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 A two-wheeled self-balancing vehicle based on the STM32F103C8T6 microcontroller, featuring cascaded PID control, MPU6050 DMP attitude sensing, and real-time OLED telemetry.
 
@@ -209,7 +209,9 @@ STM32_Programmer_CLI -c port=SWD -w Output/test_f103.hex -v -s
 
 ## License
 
-This project uses code components under the BSD 3-Clause License (STMicroelectronics) and code from ALIENTEK. See individual file headers for specific license terms.
+This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
+
+> Third-party code components retain their original licenses: STM32F1xx HAL Driver and CMSIS use BSD 3-Clause (STMicroelectronics); BSP drivers originate from ALIENTEK (正点原子).
 
 ---
 
