@@ -1,0 +1,56 @@
+# ===================================
+# Keil MDK-ARM
+# ===================================
+# Build outputs
+*.o
+*.d
+*.crf
+*.lnp
+*.dep
+*.htm
+*.lst
+*.iex
+*.axf
+*.elf
+*.bin
+*.build_log.htm
+*.map
+
+# User-specific project files
+*.uvguix.*
+*.uvoptx
+*.uvguix.*
+
+# Object & listing directories (keep Output/ for released hex if needed)
+Projects/MDK-ARM/Objects/
+Projects/MDK-ARM/Listings/
+Projects/MDK-ARM/DebugConfig/
+
+# JLink / ST-Link logs
+*.jlink
+JLinkLog.txt
+JLinkSettings.ini
+
+# ===================================
+# Editor / IDE
+# ===================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.orig
+
+# ===================================
+# OS generated files (Windows)
+# ===================================
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ===================================
+# Misc
+# ===================================
+*.bak
+*.tmp
+*.log
