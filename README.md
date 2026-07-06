@@ -1,4 +1,4 @@
-<center># Tanngrisnir</center>
+# Tanngrisnir
 
 [![Platform](https://img.shields.io/badge/platform-STM32F103C8T6-blue)](https://www.st.com/en/microcontrollers-microprocessors/stm32f103c8.html)
 [![IDE](https://img.shields.io/badge/IDE-Keil%20MDK%205-brightgreen)](https://www.keil.com/mdk5/)
