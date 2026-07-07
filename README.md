@@ -1,9 +1,11 @@
+<div align="center">
 # Tanngrisnir
 
 [![Platform](https://img.shields.io/badge/platform-STM32F103C8T6-blue)](https://www.st.com/en/microcontrollers-microprocessors/stm32f103c8.html)
 [![IDE](https://img.shields.io/badge/IDE-Keil%20MDK%205-brightgreen)](https://www.keil.com/mdk5/)
 [![HAL](https://img.shields.io/badge/HAL-STM32F1xx-orange)](https://github.com/STMicroelectronics/stm32f1xx_hal_driver)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+</div>
 
 A two-wheeled self-balancing vehicle based on the STM32F103C8T6 microcontroller, featuring cascaded PID control, MPU6050 DMP attitude sensing, and real-time OLED telemetry.
 
