@@ -4,10 +4,10 @@
 #include "./utilities.h"
 
 
-extern float pit, rol, yaw;
-extern short gyro[3];
-extern int Encoder_Left,Encoder_Right; 
-extern int Voltage;
+extern volatile float pit, rol, yaw;
+extern volatile short gyro[3];
+extern volatile int Encoder_Left, Encoder_Right;
+extern volatile int Voltage;
 
 void curveShow(void)
 {   

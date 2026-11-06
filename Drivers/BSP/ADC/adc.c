@@ -43,8 +43,8 @@ DMA_HandleTypeDef g_dma_adc_handle;     /* 与ADC关联的DMA句柄 */
 /**
  * @brief       ADC初始化函数
  *   @note      本函数支持ADC1/ADC2任意通道, 但是不支持ADC3
- *              我们使用12位精度, ADC采样时钟=21M, 转换时间为: 采样周期 + 12个ADC周期
- *              设置最大采样周期: 480, 则转换时间 = 492 个ADC周期 = 23.42us
+ *              我们使用12位精度, ADC采样时钟=12M, 转换时间为: 采样周期 + 12个ADC周期
+ *              设置最大采样周期: 240, 则转换时间 = 252 个ADC周期 = 21us
  * @param       无
  * @retval      无
  */
@@ -52,11 +52,14 @@ void adc_init(void)
 {
 	  
     ADC_ChannelConfTypeDef sConfig = {0};
-		
+
+    /* ADC clock = PCLK2 / 6 = 12 MHz, below the 14 MHz maximum. */
+    __HAL_RCC_ADC_CONFIG(RCC_ADCPCLK2_DIV6);
+
     g_adc_handle.Instance = ADC_ADCX;
 
-    g_adc_handle.Init.ScanConvMode = ADC_SCAN_DISABLE;;                               /* 非扫描模式 */
-    g_adc_handle.Init.ContinuousConvMode = DISABLE;                          /* 开启连续转换 */
+    g_adc_handle.Init.ScanConvMode = ADC_SCAN_DISABLE;                               /* 非扫描模式 */
+    g_adc_handle.Init.ContinuousConvMode = DISABLE;                          /* 单次转换 */
     g_adc_handle.Init.DiscontinuousConvMode = DISABLE;                      /* 禁止不连续采样模式 */
     g_adc_handle.Init.NbrOfDiscConversion = 0;                              /* 不连续采样通道数为0 */
     g_adc_handle.Init.ExternalTrigConv = ADC_SOFTWARE_START;                /* 软件触发 */
@@ -81,7 +84,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef *hadc)
 {
     if(hadc->Instance == ADC_ADCX)
     {
-        GPIO_InitTypeDef gpio_init_struct;
+        GPIO_InitTypeDef gpio_init_struct = {0};
         ADC_ADCX_CHY_CLK_ENABLE();      /* 使能ADCx时钟 */
         ADC_ADCX_CHY_GPIO_CLK_ENABLE(); /* 开启GPIO时钟 */
 
@@ -116,13 +119,24 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef *hadc)
  * @param       ch: 通道值 0~17，取值范围为：ADC_CHANNEL_0~ADC_CHANNEL_17
  * @retval      无
  */
-int Get_battery_volt(void)  
+int Get_battery_volt(void)
 {
-	  int Volt;
-    HAL_ADC_Start(&g_adc_handle);                                       /* 开启ADC */
-    HAL_ADC_PollForConversion(&g_adc_handle, 10);                       /* 轮询转换 */
-    Volt = (uint16_t)HAL_ADC_GetValue(&g_adc_handle)*3.3*11*1000/4096;	//电阻分压，具体根据原理图简单分析可以得到	单位mv
-	  return Volt;	
+    int Volt;
+
+    if (HAL_ADC_Start(&g_adc_handle) != HAL_OK)
+    {
+        return -1;
+    }
+
+    if (HAL_ADC_PollForConversion(&g_adc_handle, 2) != HAL_OK)
+    {
+        HAL_ADC_Stop(&g_adc_handle);
+        return -1;
+    }
+
+    Volt = (int)((uint16_t)HAL_ADC_GetValue(&g_adc_handle) * 3.3f * 11.0f * 1000.0f / 4096.0f);
+    HAL_ADC_Stop(&g_adc_handle);
+    return Volt;
 }
 
 /**

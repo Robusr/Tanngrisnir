@@ -27,6 +27,12 @@
 
 #include "./SYSTEM/sys/sys.h"
 
+/* Voltage protection thresholds, in mV */
+#define LOW_VOLT_STOP_MV   10000
+#define LOW_VOLT_HARD_MV   7000
+
+extern volatile uint8_t mpuFault;
+
 
 /******************************************************************************************/
 /* 引脚 和 中断编号 & 中断服务函数 定义 */ 
@@ -53,13 +59,11 @@
 void exti_key0_init(void);  /* 外部中断初始化 */
 void exti_mpu6050_init(void);  /* 外部中断初始化 */
 void readVel(void);
-void readMpu(void);
+uint8_t readMpu(void);
 void readVolt(uint8_t cnt);
 
 int Balance(float angle,float gyro);
 int Velocity(int encoder_left,int encoder_right);
-int Turn(float gyro);
-void Set_Pwm(int motor_left,int motor_right);
 int PWM_Limit(int IN,int max,int min);
 uint8_t Turn_Off(void);
 #endif

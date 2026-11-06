@@ -32,7 +32,7 @@
 #include "./BSP/ENCODER/encoder.h"
 #include "./BSP/ADC/adc.h"
 #include "./BSP/MOTOR/motor.h"
-#include <cmath>
+#include <math.h>
 /**
 
 
@@ -40,17 +40,19 @@
  
  
  
-uint8_t ret=0;
-float pit, rol, yaw;
-short gyro[3];
-int Encoder_Left,Encoder_Right; 
-int Voltage,Voltage_Temp,Voltage_Count,Voltage_All;		//电压测量相关变量
-uint8_t stopFlag;
-uint8_t tenMsFlag;
-int Balance_Pwm,Velocity_Pwm,Turn_Pwm;		  					//平衡环PWM变量，速度环PWM变量，转向环PWM变
-int Motor_Left,Motor_Right;                 //电机PWM变量 
-float Balance_Kp=400,Balance_Kd=2,Velocity_Kp=160,Velocity_Ki=0.8;
-//400,1.8，130，0.65
+volatile float pit, rol, yaw;
+volatile short gyro[3];
+volatile int Encoder_Left, Encoder_Right;
+volatile int Voltage = 0;
+static int Voltage_Temp = 0, Voltage_Count = 0, Voltage_All = 0;
+volatile uint8_t stopFlag = 0;
+volatile uint8_t tenMsFlag = 0;
+volatile uint8_t mpuFault = 0;
+static uint8_t mpuFailCount = 0;
+static int Balance_Pwm, Velocity_Pwm;
+static int Motor_Left, Motor_Right;
+static float Balance_Kp = 400.0f, Balance_Kd = 2.0f;
+static float Velocity_Kp = 160.0f, Velocity_Ki = 0.8f;
 
 
 //中断处理函数
@@ -71,31 +73,33 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     switch(GPIO_Pin)
     {
         case KEY0_INT_GPIO_PIN:
-            if (KEY0_INT == 0)  //最高速
+            if (KEY0_INT == 0)
             {
-							stopFlag=!stopFlag;
-							
-							if(LEDSta)
-							{
-								LED0(0);
-							}else
-							{
-								LED0(1);
-							}
-						
-					  }
-    
-          break;
+                stopFlag = !stopFlag;
+                if (stopFlag)
+                {
+                    motorStop();
+                    LED_OFF();
+                }
+                else
+                {
+                    LED_ON();
+                }
+            }
+            break;
 						case MPU6050_EXTI_Pin:  //每5ms一次中断
 						
-					    tenMsFlag=!tenMsFlag;//10ms到达标记
-							readVel();   //测量左右轮编码器速度cnt/5ms
-					    readMpu();   //测量pit，pitVel，yawVel，初始化时需要直立
-					    if(tenMsFlag)
-							{
-								readVolt(10);//测量电池电压 ,每10ms更新一次
-								return;
-							}
+            tenMsFlag = !tenMsFlag;
+            readVel();
+            if (readMpu() != 0 || mpuFault)
+            {
+                motorStop();
+                return;
+            }
+            if (tenMsFlag)
+            {
+                return;
+            }
 							
 						  
 							/**
@@ -114,8 +118,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 							//PWM值正数使小车前进，负数使小车后退
 							Motor_Left=PWM_Limit(Motor_Left,6900,-6900);
 							Motor_Right=PWM_Limit(Motor_Right,6900,-6900);			//PWM限幅
-							if(!Turn_Off())     					//如果不存在异常
-							motorMove(Motor_Left,Motor_Right);         					//赋值给PWM寄存器  
+							if (!Turn_Off())
+							{
+							    motorMove(Motor_Left, Motor_Right);
+							}
+							else
+							{
+							    motorStop();
+							}
 							
 			
 							
@@ -182,19 +192,67 @@ void readVel(void)
 	
 }
 
-void readMpu(void)
+uint8_t readMpu(void)
 {
-		do{ret=atk_ms6050_dmp_get_data(gyro,&pit, &rol, &yaw);}
-		while(ret!=0);
+    uint8_t ret;
+    uint8_t retry = 0;
+    short gyro_buf[3];
+    float pitch_buf, roll_buf, yaw_buf;
+
+    if (mpuFault)
+    {
+        return 1;
+    }
+
+    do
+    {
+        ret = atk_ms6050_dmp_get_data(gyro_buf, &pitch_buf, &roll_buf, &yaw_buf);
+    } while (ret != 0 && ++retry < 3);
+
+    if (ret != 0)
+    {
+        if (++mpuFailCount >= 10)
+        {
+            mpuFault = 1;
+        }
+        return 1;
+    }
+
+    mpuFailCount = 0;
+    gyro[0] = gyro_buf[0];
+    gyro[1] = gyro_buf[1];
+    gyro[2] = gyro_buf[2];
+    pit = pitch_buf;
+    rol = roll_buf;
+    yaw = yaw_buf;
+    return 0;
 }
 
 void readVolt(uint8_t cnt)
 {
-	
-		Voltage_Temp=Get_battery_volt();		    					//读取电池电压		
-		Voltage_Count++;                       						//平均值计数器
-		Voltage_All+=Voltage_Temp;              					//多次采样累积
-		if(Voltage_Count==cnt) Voltage=Voltage_All/cnt,Voltage_All=0,Voltage_Count=0;//求平均值单位mv
+    int volt;
+
+    if (cnt == 0)
+    {
+        return;
+    }
+
+    volt = Get_battery_volt();
+    if (volt < 0)
+    {
+        return;
+    }
+
+    Voltage_Temp = volt;
+    Voltage_Count++;
+    Voltage_All += Voltage_Temp;
+
+    if (Voltage_Count >= cnt)
+    {
+        Voltage = Voltage_All / Voltage_Count;
+        Voltage_All = 0;
+        Voltage_Count = 0;
+    }
 }
 
 
@@ -202,7 +260,7 @@ void readVolt(uint8_t cnt)
 int Balance(float Angle,float Gyro)
 {  
   
-		 int balance=Balance_Kp*Angle+Gyro*Balance_Kd; //计算平衡控制的电机PWM  PD控制   kp是P系数 kd是D系数 
+		 int balance = (int)(Balance_Kp * Angle + Gyro * Balance_Kd);
 		 return balance;
 
 }
@@ -216,20 +274,20 @@ int Velocity(int encoder_left,int encoder_right)  //转速环PI控制
 			if(Encoder_Integral>10000)  	Encoder_Integral=10000;             //积分限幅
 			if(Encoder_Integral<-10000)	  Encoder_Integral=-10000;            //积分限幅	
 			velocity=-Encoder_bias*Velocity_Kp-Encoder_Integral*Velocity_Ki;     //速度控制	
-			if(stopFlag==1) Encoder_Integral=0;//电机关闭后清除积分
-			return velocity;                                            //这里利用串级PID进行了数学化简得到一个速度环，本质输出的其实是倾角，倾角给到直立环作为输入从而输出a，a就可以调节速度了。比如目标速度是0，当前反馈速度为正，则需要a为负来减速，那么要输出倾角为负。
+			if (stopFlag || mpuFault) Encoder_Integral = 0;//电机关闭后清除积分
+			return (int)velocity;                                            //这里利用串级PID进行了数学化简得到一个速度环，本质输出的其实是倾角，倾角给到直立环作为输入从而输出a，a就可以调节速度了。比如目标速度是0，当前反馈速度为正，则需要a为负来减速，那么要输出倾角为负。
 }
 
 uint8_t Turn_Off(void)
 {
     // 1. 检查电池电压是否过低（假设低于7V为异常）
-    if(Voltage < 7000)  // Voltage单位是mV
+    if (Voltage < LOW_VOLT_HARD_MV)
     {
         return 1;  // 需要关闭电机
     }
     
     // 2. 检查姿态角度是否过大（假设超过30度为异常）
-    if(fabs(pit) > 30 || fabs(rol) > 30)
+    if (fabsf(pit) > 30.0f || fabsf(rol) > 30.0f)
     {
         return 1;  // 需要关闭电机
     }

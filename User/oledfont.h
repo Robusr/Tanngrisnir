@@ -1,3 +1,5 @@
+/* LEGACY COPY - not referenced by Projects/MDK-ARM/test_f103.uvprojx.
+ * The compiled OLED driver is Drivers/BSP/OLED/oled.c and oled.h. */
 /**
  ****************************************************************************************************
  * @file        oledfont.h

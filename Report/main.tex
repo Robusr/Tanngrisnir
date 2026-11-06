@@ -367,7 +367,7 @@ STM32F103C8T6 最小系统包含：8\,MHz 外部晶振（经内部 PLL 倍频至
     TIM1     & CH1 + CH4    & 双路 PWM 输出（电机 A / B） & PA8、PA11 \\
     TIM3     & CH1 + CH2    & 左轮编码器 AB 相计数      & PA6、PA7 \\
     TIM4     & CH1 + CH2    & 右轮编码器 AB 相计数      & PB6、PB7 \\
-    I2C2     & SCL + SDA    & MPU6050 通信（地址 0x68） & PB10、PB11 \\
+    GPIO     & SCL + SDA    & MPU6050 通信（软件 I2C，地址 0x68） & PB8、PB9 \\
     ADC1     & CH8          & 电池电压采集（12 位）     & PB0 \\
     USART1   & TX + RX      & 调试输出与 DataScope      & PA9、PA10 \\
     EXTI9-5  & PA5          & KEY0 独立按键中断         & PA5 \\
@@ -403,7 +403,7 @@ TB6612 电机驱动逻辑如表 \ref{tbl:tb6612} 所示，每个电机需 3 个�
 
 \subsubsection{姿态传感模块}
 
-MPU6050 通过 I2C2 接口与 MCU 通信，SCL 为 PB10、SDA 为 PB11，器件地址为 0x68。INT 中断引脚连接至 PA12，配置为下降沿触发，MPU6050 DMP 数据就绪时以 200\,Hz 频率产生中断信号。该中断作为系统控制周期的时基来源。
+MPU6050 通过软件 I2C 接口与 MCU 通信，SCL 为 PB8、SDA 为 PB9，器件地址为 0x68。AD0 在模块端接地，固件不再驱动 PA15，避免与 OLED 的 RS 引脚冲突。INT 中断引脚连接至 PA12，配置为下降沿触发，MPU6050 DMP 数据就绪时以 200\,Hz 频率产生中断信号。该中断作为系统控制周期的时基来源。
 
 \subsubsection{电源模块}
 
@@ -448,8 +448,8 @@ MPU6050 通过 I2C2 接口与 MCU 通信，SCL 为 PB10、SDA 为 PB11，器件�
     左编码器 B    & PA7  & TIM3\_CH2  & 编码器模式 \\
     右编码器 A    & PB6  & TIM4\_CH1  & 编码器模式 \\
     右编码器 B    & PB7  & TIM4\_CH2  & 编码器模式 \\
-    MPU6050 SCL   & PB10 & I2C2\_SCL  & I2C 通信 \\
-    MPU6050 SDA   & PB11 & I2C2\_SDA  & I2C 通信 \\
+    MPU6050 SCL   & PB8  & GPIO       & 软件 I2C \\
+    MPU6050 SDA   & PB9  & GPIO       & 软件 I2C \\
     MPU6050 INT   & PA12 & EXTI15\_10 & 下降沿中断 \\
     OLED RST      & PB3  & GPIO       & 推挽输出 \\
     OLED CS       & PA1  & GPIO       & 推挽输出 \\
@@ -472,8 +472,8 @@ MPU6050 通过 I2C2 接口与 MCU 通信，SCL 为 PB10、SDA 为 PB11，器件�
 本系统采用前后台软件架构（Foreground/Background System）：
 
 \begin{itemize}
-  \item \textbf{前台（中断服务程序 ISR）}：以 MPU6050 200\,Hz 外部中断为时基，每 5\,ms 触发一次中断。在中断服务中，通过 tenMsFlag 软件分频实现：奇数中断（5\,ms 标记）执行编码器速度读取与 DMP 姿态数据读取；偶数中断（10\,ms 标记）执行 PID 控制运算、电池电压采样、PWM 输出更新。所有实时控制逻辑均在中断上下文中完成，保证 10\,ms 确定的控制周期。
-  \item \textbf{后台（主循环 while(1)）}：处理非实时任务——OLED 显示刷新、电压保护检查、延迟等待。由于实时控制已在中断中完成，主循环可适当容忍延迟，不影响系统稳定性。
+  \item \textbf{前台（中断服务程序 ISR）}：以 MPU6050 200\,Hz 外部中断为时基，每 5\,ms 触发一次中断。在中断服务中，通过 tenMsFlag 软件分频实现：奇数中断（5\,ms 标记）执行编码器速度读取与 DMP 姿态数据读取；偶数中断（10\,ms 标记）执行 PID 控制运算与 PWM 输出更新。电池电压采样、OLED 刷新、DataScope 输出和串口命令处理放在主循环中。所有实时控制逻辑均在中断上下文中完成，保证 10\,ms 确定的控制周期。
+  \item \textbf{后台（主循环 while(1)）}：处理非实时任务，包括电池电压采样、OLED 显示刷新、DataScope 输出、串口命令处理、电压保护检查和延迟等待。由于实时控制已在中断中完成，主循环可适当容忍延迟，不影响系统稳定性。
 \end{itemize}
 
 \subsection{主程序总流程图}
@@ -493,7 +493,7 @@ MPU6050 通过 I2C2 接口与 MCU 通信，SCL 为 PB10、SDA 为 PB11，器件�
     \node [block, below=of hal] (init) {外设初始化：\\ADC / MPU6050 / DMP\\EXTI / OLED / 电机 / 编码器};
     \node [block, below=of init] (display) {OLED 显示初始信息};
     \node [block, below=of display] (delay) {延时 1\,s 等待系统稳定};
-    \node [block, below=of delay] (oled) {OLED 刷新显示\\（角度、角速度、电压）};
+    \node [block, below=of delay] (oled) {主循环：电压采样、OLED 刷新\\DataScope 输出、串口处理};
     \node [dblock, below=of oled] (check) {电池电压\\$\!<\!$ 10.0\,V？};
     \node [block, right=2.4cm of check] (shutdown) {电机停机\\串口告警};
     \node [block, below=of check] (sleep) {延时 10\,ms};
@@ -539,7 +539,7 @@ MPU6050 通过 I2C2 接口与 MCU 通信，SCL 为 PB10、SDA 为 PB11，器件�
     \hline
     \multirow{2}{*}{算法层}
       & 串级 PID 控制  & Drivers/BSP/EXTI/exti.c（Balance、Velocity） \\
-      & 数据滤波       & Drivers/BSP/EXTI/exti.c（readVolt 滑动平均） \\
+      & 数据滤波       & Drivers/BSP/EXTI/exti.c（readVolt 分块平均） \\
     \hline
     \multirow{3}{*}{应用层}
       & 主程序入口    & User/main.c \\
@@ -566,21 +566,19 @@ MPU6050 外部中断服务程序是系统控制的核心调度器，其执行流
     \node [block, below=of isr] (read) {readVel()：读取编码器速度\\readMpu()：读取 DMP 姿态};
     \node [block, below=of read] (toggle) {tenMsFlag = !tenMsFlag};
     \node [dblock, below=of toggle] (flag) {tenMsFlag == 1 ?};
-    \node [block, right=2.4cm of flag] (volt) {readVolt(10)：\\滑动平均采集电池电压};
-    \node [block, below=of volt] (ret) {返回};
+    \node [block, right=2.4cm of flag] (ret) {返回（5ms 任务）};
     \node [block, below=of flag] (pid) {Balance(angle, gyro)：\\直立 PD 控制};
     \node [block, below=of pid] (vel) {Velocity(encL, encR)：\\速度 PI 控制};
     \node [block, below=of vel, text width=3.5cm] (sum) {Motor\_PWM = Balance + Velocity\\PWM\_Limit($\pm$6900)};
     \node [dblock, below=of sum] (safe) {Turn\_Off()\\无异常？};
     \node [block, below=of safe] (drive) {motorMove(L,R)：\\输出 PWM 至电机};
-    \node [block, right=2.4cm of safe] (stop) {关停电机};
+    \node [block, right=2.4cm of safe] (stop) {motorStop()};
     \node [block, below=of drive] (exit) {退出中断};
     \draw [arr] (isr) -- (read);
     \draw [arr] (read) -- (toggle);
     \draw [arr] (toggle) -- (flag);
-    \draw [arr] (flag) -- node[above,font=\footnotesize] {否 (5ms任务)} (volt);
-    \draw [arr] (volt) -- (ret);
-    \draw [arr] (flag) -- node[left,font=\footnotesize] {是 (10ms任务)} (pid);
+    \draw [arr] (flag) -- node[above,font=\footnotesize] {是 (5ms任务)} (ret);
+    \draw [arr] (flag) -- node[left,font=\footnotesize] {否 (10ms任务)} (pid);
     \draw [arr] (pid) -- (vel);
     \draw [arr] (vel) -- (sum);
     \draw [arr] (sum) -- (safe);
@@ -601,15 +599,15 @@ MPU6050 外部中断服务程序是系统控制的核心调度器，其执行流
   \item \texttt{HAL\_Init()}：初始化 HAL 库基本框架（SysTick 配置、NVIC 分组）。
   \item \texttt{sys\_stm32\_clock\_init(RCC\_PLL\_MUL9)}：配置系统时钟，8\,MHz 外部晶振经 PLL 9 倍频至 72\,MHz，APB1 = 36\,MHz，APB2 = 72\,MHz。
   \item \texttt{delay\_init(72)}：以 SysTick 为时基的毫秒/微秒延时函数初始化。
+  \item \texttt{led\_init()}：PA4 状态指示灯初始化。
   \item \texttt{usart\_init(115200)}：USART1 初始化为 115200\,bps，8N1 格式，使能 printf 重定向。
-  \item \texttt{adc\_init()}：ADC1 通道 8（PB0）初始化，12 位分辨率。
-  \item \texttt{atk\_ms6050\_init()}：MPU6050 传感器初始化，I2C 通信链路建立，复位并唤醒器件。
-  \item \texttt{atk\_ms6050\_dmp\_init()}：加载 DMP 固件，配置 FIFO 输出频率 200\,Hz，使能 DMP 中断。
-  \item \texttt{exti\_mpu6050\_init()}：配置 PA12 为下降沿外部中断，连接至 MPU6050 INT 引脚。
-  \item \texttt{exti\_key0\_init()}：配置 PA5 为下降沿外部中断，连接至 KEY0 独立按键。
-  \item \texttt{oled\_init()}：OLED SSD1306 控制器初始化，清屏并设置对比度。
-  \item \texttt{motorInit()}：TIM1 CH1/CH4 配置为 PWM 输出，电机方向控制引脚初始化。
+  \item \texttt{adc\_init()}：ADC1 通道 8（PB0）初始化，ADC 时钟配置为 PCLK2/6 = 12\,MHz。
+  \item \texttt{motorInit()}：TIM1 CH1/CH4 配置为 10\,kHz PWM 输出，电机方向控制引脚初始化。
   \item \texttt{leftEncoderInit() / rightEncoderInit()}：TIM3 / TIM4 配置为编码器模式，设置计数位宽。
+  \item \texttt{oled\_init()}：OLED SSD1306 控制器初始化，清屏并设置对比度。
+  \item \texttt{atk\_ms6050\_init()}：MPU6050 传感器初始化，软件 I2C 链路建立，复位并唤醒器件。
+  \item \texttt{atk\_ms6050\_dmp\_init()}：加载 DMP 固件，配置 FIFO 输出频率 200\,Hz，使能 DMP 中断；失败时重试一次。
+  \item \texttt{exti\_key0\_init() / exti\_mpu6050\_init()}：配置 PA5 按键中断与 PA12 MPU6050 数据就绪中断。
 \end{enumerate}
 
 % =============================================================================
@@ -723,14 +721,14 @@ TIM1 高级定时器以 72\,MHz 时钟源驱动，配置自动重装载值（ARR
 
 \subsection{数据滤波技术}
 
-电池电压采集采用滑动平均滤波（移动平均滤波器）。在 \texttt{readVolt(cnt)} 函数中，每次 5\,ms 中断调用时采集一次 ADC 原始值，累加 \texttt{cnt} 次（cnt = 10，即每 10 个中断周期合计 50\,ms）后取均值，刷新全局变量 \texttt{Voltage}。该滤波器对随机噪声的衰减为 $\sqrt{\text{cnt}}$ 倍（约 9.5\,dB），有效消除了 ADC 量化噪声与电源纹波干扰。
+电池电压采集采用分块平均滤波（块平均滤波器）。在 \texttt{readVolt(cnt)} 函数中，主循环每轮调用一次并采集一次 ADC 原始值，累加 \texttt{cnt} 次（cnt = 10）后取均值，刷新全局变量 \texttt{Voltage}。按主循环约 10\,ms 的周期，电压约每 100\,ms 更新一次。该滤波器对随机噪声的衰减为 $\sqrt{\text{cnt}}$ 倍（约 9.5\,dB），有效消除了 ADC 量化噪声与电源纹波干扰。
 
 \subsection{低压保护机制}
 
 系统设置两级电压保护策略：
 
 \begin{enumerate}
-  \item \textbf{低电量告警}（主循环）：当电池电压 $<$ 10.0\,V 时（对应 3S 锂电池单节电压约 3.33\,V），通过串口 printf 输出电压过低警告并自动停机。
+  \item \textbf{低电量软停机}（主循环）：当电池电压 $<$ 10.0\,V 时（对应 3S 锂电池单节电压约 3.33\,V），通过串口 printf 输出电压过低警告并自动停机。
   \item \textbf{硬关断保护}（中断内 Turn\_Off 函数）：当电池电压 $<$ 7.0\,V 时，中断内强制关闭电机 PWM 输出，防止锂电池过放损坏。
 \end{enumerate}
 
@@ -755,10 +753,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
         case MPU6050_EXTI_Pin:          // 每 5ms 一次中断 (200Hz)
             tenMsFlag = !tenMsFlag;     // 10ms 到达标记
             readVel();                  // 读取编码器速度 (cnt/5ms)
-            readMpu();                  // 读取 DMP 姿态 (pit, gyro)
+            if (readMpu() != 0 || mpuFault)
+            {
+                motorStop();            // DMP 读取失败，立即停机
+                return;
+            }
             if(tenMsFlag)               // 奇数序中断：只采样,不控制
             {
-                readVolt(10);           // 电池电压滑动平均
                 return;                 // 退出，等待下一次中断
             }
             // ---- 10ms 控制周期 (偶数序中断) ----
@@ -770,12 +771,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
             Motor_Right  = PWM_Limit(Motor_Right, 6900, -6900);
             if(!Turn_Off())             // 安全检查
                 motorMove(Motor_Left, Motor_Right);
+            else
+                motorStop();
             break;
     }
 }
 \end{lstlisting}
 
-\textbf{代码解读}：\texttt{tenMsFlag} 在每个 5\,ms 中断中翻转，实现 200\,Hz $\to$ 100\,Hz 的 2 分频。当 \texttt{tenMsFlag = 0} 时（5\,ms 任务）：仅执行传感器采样；当 \texttt{tenMsFlag = 1} 时（10\,ms 任务）：额外执行 PID 计算与 PWM 输出。这种双频任务调度方法在单个物理中断源中实现了两种不同频率的操作，代码量最小、开销最低。
+\textbf{代码解读}：\texttt{tenMsFlag} 在每个 5\,ms 中断中翻转，实现 200\,Hz $\to$ 100\,Hz 的 2 分频。当 \texttt{tenMsFlag = 1} 时，本次中断只执行传感器采样并返回；当 \texttt{tenMsFlag = 0} 时，执行 PID 计算与 PWM 输出。这种双频任务调度方法在单个物理中断源中实现了两种不同频率的操作，代码量最小、开销最低。
 
 \subsection{直立环 PD 控制函数}
 
@@ -878,36 +881,38 @@ void motorMove(int leftPwm, int rightPwm)
         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_15, GPIO_PIN_RESET);
     }
-    __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, abs(leftPwm));
-    // 右轮同理 (TIM1_CH4, PB13/PB12) ...
+    PWMA = abs(leftPwm);
+    PWMB = abs(rightPwm);
 }
 \end{lstlisting}
 
-\textbf{代码解读}：\texttt{motorMove()} 函数根据 PWM 值符号判断转向需求——正值前进（IN1 高/IN2 低）、负值后退（IN1 低/IN2 高）、零值滑行停止（IN1 低/IN2 低）。通过 \texttt{\_\_HAL\_TIM\_SET\_COMPARE()} 宏直接修改 TIM1 的 CCR 比较寄存器，实现 PWM 占空比的实时更新。
+\textbf{代码解读}：\texttt{motorMove()} 函数根据 PWM 值符号判断转向需求——正值前进（IN1 高/IN2 低）、负值后退（IN1 低/IN2 高）、零值滑行停止（IN1 低/IN2 低）。通过 \texttt{PWMA}/\texttt{PWMB} 宏直接写 TIM1 的 CCR1/CCR4 比较寄存器，实现 PWM 占空比的实时更新。
 
 \subsection{电压采集与滤波函数}
 
 \begin{lstlisting}[
   language   = C,
-  caption    = {电压采集与滑动平均滤波},
+  caption    = {电压采集与分块平均滤波},
   label      = {code:adc},
   title      = {\small Drivers/BSP/EXTI/exti.c — readVolt},
 ]
 void readVolt(uint8_t cnt)               // cnt = 10
 {
-    Voltage_Temp = Get_battery_volt();   // ADC 采样 + 分压换算
+    int volt = Get_battery_volt();       // ADC 采样 + 分压换算
+    if (volt < 0) return;                // ADC 故障时保持上次值
+    Voltage_Temp = volt;
     Voltage_Count++;
     Voltage_All += Voltage_Temp;         // 累加
-    if(Voltage_Count == cnt)             // 达到采样次数
+    if (Voltage_Count >= cnt)            // 达到采样次数
     {
-        Voltage      = Voltage_All / cnt;// 滑动平均
+        Voltage      = Voltage_All / Voltage_Count;
         Voltage_All  = 0;                // 归零准备下一轮
         Voltage_Count = 0;
     }
 }
 \end{lstlisting}
 
-\textbf{代码解读}：\texttt{Get\_battery\_volt()} 在 ADC 驱动层实现，完成 ADC 采样、12 位量化值读取及 11:1 分压逆换算至实际电压值（mV 单位）。\texttt{readVolt()} 在每次 5\,ms 中断中被调用（随 \texttt{tenMsFlag == 1} 路径），每调用一次累加一次采样值，10 次后（合计 50\,ms）取均值，相当于一个长度为 10 的滑动平均滤波器（移动窗口无重叠采样）。
+\textbf{代码解读}：\texttt{Get\_battery\_volt()} 在 ADC 驱动层实现，完成 ADC 采样、12 位量化值读取及 11:1 分压逆换算至实际电压值（mV 单位）。\texttt{readVolt()} 在主循环中被调用，每调用一次累加一次采样值，10 次后取均值。按主循环约 10\,ms 的周期，电压约每 100\,ms 更新一次，相当于一个长度为 10 的分块平均滤波器。
 
 % =============================================================================
 %  第 5 章  系统调试过程
@@ -979,7 +984,7 @@ void readVolt(uint8_t cnt)               // cnt = 10
       \item gyro[0] 在绕 pitch 轴旋转时输出合理的角速度值，动态响应灵敏；
       \item DMP 数据更新频率稳定在 200\,Hz。
     \end{enumerate}
-  \item \textbf{调试现象}：初次上电后 DMP 初始化偶尔失败，返回错误码。原因：MPU6050 上电稳定时间不足——在 \texttt{atk\_ms6050\_dmp\_init()} 启动前增加 200\,ms 延时后解决。
+  \item \textbf{调试现象}：初次上电后 DMP 初始化偶尔失败，返回错误码。原因：MPU6050 上电稳定时间不足——在 \texttt{atk\_ms6050\_dmp\_init()} 启动前增加 200\,ms 延时，并对初始化失败进行一次重试后解决。
 \end{itemize}
 
 \subsection{电压采集调试}
@@ -1123,7 +1128,7 @@ void readVolt(uint8_t cnt)               // cnt = 10
     稳态位移误差         & $\leq$ 5\,cm  & $\approx$ 3.2\,cm & $\surd$ 达成 \\
     抗干扰恢复           & $\leq 10^{\circ}$ 可恢复 & $\sim 8^{\circ}$ 1.2\,s 恢复 & $\surd$ 达成 \\
     低压保护             & $<$ 10\,V 停机 & 阈值触发正确   & $\surd$ 达成 \\
-    OLED 状态显示        & 实时刷新      & 100\,ms 刷新速率 & $\surd$ 达成 \\
+    OLED 状态显示        & 实时刷新      & 主循环实时刷新 & $\surd$ 达成 \\
     虚拟示波器 DataScope & 串口波形显示  & 3 通道波形正常  & $\surd$ 达成 \\
     按键启停             & 触发可靠      & 可靠            & $\surd$ 达成 \\
     \bottomrule
@@ -1158,7 +1163,7 @@ void readVolt(uint8_t cnt)               // cnt = 10
   \item \textbf{无转向控制功能}：目前仅实现原地平衡（零速度控制），缺乏转向控制通道——YAW 角的闭环控制尚未实现，小车无法自主导航。
   \item \textbf{PID 参数离线整定}：参数整定依赖手动试凑，无在线自适应或自整定功能。不同地面（地毯 vs 硬地）下最优参数不同，无法自动切换。
   \item \textbf{上位机界面简陋}：DataScope 仅能显示 3 通道原始波形，无法进行在线参数调整——修改 PID 参数需重新编译烧录。
-  \item \textbf{电压保护两级阈值不一致}：主循环 10\,V 告警与 ISR 内 7\,V 硬关断的阈值关系在代码中缺乏统一常量定义，容易维护遗漏。
+  \item \textbf{无独立看门狗}：当前依赖主循环和中断错误处理，未启用 IWDG，极端异常下缺少硬件级复位保护。
 \end{enumerate}
 
 \subsection{后续优化方向}

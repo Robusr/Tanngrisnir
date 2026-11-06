@@ -51,6 +51,7 @@
 
 
 void motorInit(void);
+void motorStop(void);
 void motorMove(int motor_left,int motor_right);
 int PWM_Limit(int IN,int max,int min);
 #endif

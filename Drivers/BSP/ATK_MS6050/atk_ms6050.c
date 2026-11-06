@@ -29,24 +29,25 @@
  * @param       无
  * @retval      无
  */
+#ifndef ATK_MS6050_AD0_DRIVE_ENABLE
+#define ATK_MS6050_AD0_DRIVE_ENABLE 0
+#endif
+
 static void atk_ms6050_hw_init(void)
 {
+#if ATK_MS6050_AD0_DRIVE_ENABLE
+    /* Optional AD0 drive. Do not enable this on a board where PA15 is
+     * used by the OLED RS line; tie AD0 low on the module instead. */
     GPIO_InitTypeDef gpio_init_struct = {0};
-    
-    /* 使能AD0引脚GPIO的时钟 */
+
     ATK_MS6050_AD0_GPIO_CLK_ENABLE();
-    
-    /* 初始化AD0引脚 */
-    gpio_init_struct.Pin    = ATK_MS6050_AD0_GPIO_PIN;  /* AD0引脚 */
-    gpio_init_struct.Mode   = GPIO_MODE_OUTPUT_PP;      /* 推挽输出 */
-    gpio_init_struct.Pull   = GPIO_PULLUP;              /* 上拉 */
-    gpio_init_struct.Speed  = GPIO_SPEED_FREQ_HIGH;     /* 高速 */
+    gpio_init_struct.Pin    = ATK_MS6050_AD0_GPIO_PIN;
+    gpio_init_struct.Mode   = GPIO_MODE_OUTPUT_PP;
+    gpio_init_struct.Pull   = GPIO_PULLUP;
+    gpio_init_struct.Speed  = GPIO_SPEED_FREQ_HIGH;
     HAL_GPIO_Init(ATK_MS6050_AD0_GPIO_PORT, &gpio_init_struct);
-    
-    /* 控制ATK-MS6050的AD0引脚为低电平
-     * 设置其IIC的从机地址为0x68
-     */
     ATK_MS6050_AD0(0);
+#endif
 }
 
 /**

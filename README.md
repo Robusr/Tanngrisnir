@@ -20,9 +20,10 @@ A two-wheeled self-balancing vehicle based on the STM32F103C8T6 microcontroller,
 - **MPU6050 DMP** — onboard digital motion processor for accurate pitch/roll/yaw attitude data
 - **Encoder feedback** — dual quadrature encoders for precise wheel velocity measurement
 - **OLED display** — real-time telemetry showing pitch angle, angular velocity, and battery voltage
-- **Virtual oscilloscope** — USART-based DataScope protocol for wireless waveform monitoring
-- **Safety protection** — low-voltage shutdown (< 7.0 V), excessive tilt shutdown (> 30°), and manual stop
+- **Virtual oscilloscope** — USART-based DataScope output on USART1
+- **Safety protection** — low-voltage stop (< 10.0 V soft, < 7.0 V hard), excessive tilt stop (> 30°), and manual stop via KEY0
 - **Battery monitoring** — ADC voltage sensing with 11:1 resistor divider
+- **Status LED** — PA4 indicates run/stop state
 
 ---
 
@@ -33,7 +34,7 @@ A two-wheeled self-balancing vehicle based on the STM32F103C8T6 microcontroller,
 | Component | Part / Model | Notes |
 |---|---|---|
 | MCU | STM32F103C8T6 (Cortex-M3, 72 MHz) | 64 KB Flash, 20 KB SRAM |
-| IMU | ATK-MS6050 (MPU6050-based) | I2C address 0x68, DMP enabled |
+| IMU | ATK-MS6050 (MPU6050-based) | Software I2C on PB8/PB9, address 0x68, AD0 tied low |
 | Motor Driver | TB6612 / L298N compatible | H-bridge with direction + PWM |
 | Motors | DC geared motors with encoders | Quadrature encoder, 2-channel per motor |
 | Display | 0.96" OLED (SPI 4-wire) | 128×64, SSD1306-compatible |
@@ -57,20 +58,22 @@ A two-wheeled self-balancing vehicle based on the STM32F103C8T6 microcontroller,
 | **Left Encoder B** | PA7 | TIM3_CH2 | TIM3 |
 | **Right Encoder A** | PB6 | TIM4_CH1 | TIM4 (Encoder mode) |
 | **Right Encoder B** | PB7 | TIM4_CH2 | TIM4 |
-| MPU6050 I2C SCL | PB10 | I2C2_SCL | I2C2 |
-| MPU6050 I2C SDA | PB11 | I2C2_SDA | I2C2 |
-| MPU6050 INT | PA12 | EXTI12 | 200 Hz interrupt |
+| MPU6050 I2C SCL | PB8 | GPIO | Software I2C |
+| MPU6050 I2C SDA | PB9 | GPIO | Software I2C |
+| MPU6050 INT | PA12 | EXTI15_10 | 200 Hz interrupt |
 | OLED RST | PB3 | GPIO | — |
 | OLED CS | PA1 | GPIO | — |
 | OLED RS (D/C) | PA15 | GPIO | — |
 | OLED SCLK | PB5 | GPIO | SPI (software) |
 | OLED SDIN | PB4 | GPIO | SPI (software) |
-| KEY0 (stop) | PA5 | EXTI5 | Falling edge |
+| KEY0 (stop) | PA5 | EXTI9_5 | Falling edge |
 | LED | PA4 | GPIO | Status indicator |
 | Battery ADC | PB0 | ADC1_CH8 | ADC1 |
 | USART1 TX | PA9 | USART1_TX | 115200 bps |
 
 </details>
+
+> **ATK-MS6050 note:** AD0 is tied low on the module. PA15 is used for the OLED RS line, so the firmware does not drive AD0.
 
 ---
 
@@ -117,8 +120,8 @@ MPU6050 INT (200 Hz)
   │            set tenMsFlag
   │
   └── 10 ms →  run PID controller
-               sample battery voltage
                update motor PWM output
+Main loop: battery sampling, OLED refresh, DataScope output, serial commands
 ```
 
 ### Directory Structure
@@ -142,12 +145,10 @@ Tanngrisnir/
 │   │   └── TIMER/                    # General-purpose timers
 │   └── SYSTEM/                       # sys / delay / usart utilities
 ├── User/
-│   ├── main.c                        # Entry point & main loop
-│   ├── exti.c                        # ISR callbacks → PID controller
+│   ├── main.c                        # Entry point, init and main loop
 │   ├── curveShow.c                   # DataScope virtual oscilloscope output
 │   ├── oledShow.c                    # OLED real-time telemetry
-│   ├── oledfont.h                    # OLED font bitmap
-│   └── utilities.c                   # Helper functions & DataScope protocol
+│   └── utilities.c                   # DataScope protocol and serial test
 ├── Projects/
 │   └── MDK-ARM/
 │       └── test_f103.uvprojx         # Keil MDK project file
@@ -172,6 +173,8 @@ Tanngrisnir/
    - `STM32F103xB`
 3. Build (<kbd>F7</kbd>) — output hex file will be generated at `Output/test_f103.hex`
 
+> The repository ships only the Keil MDK project; there is no Makefile or CMake build.
+
 ### Flash
 
 Connect your debugger and press <kbd>F8</kbd> in Keil MDK, or use STM32CubeProgrammer:
@@ -189,6 +192,7 @@ STM32_Programmer_CLI -c port=SWD -w Output/test_f103.hex -v -s
    - **pitVel**: angular velocity from gyroscope
    - **batVol**: battery voltage in mV
 4. Connect to USART1 (115200 bps) to view DataScope virtual oscilloscope output
+5. LED is on while running and off while stopped
 
 ---
 
@@ -196,10 +200,10 @@ STM32_Programmer_CLI -c port=SWD -w Output/test_f103.hex -v -s
 
 | Protection | Threshold | Action |
 |---|---|---|
-| Low battery | < 7.0 V | Motor shutdown |
-| Excessive tilt | pitch or roll > 30° | Motor shutdown |
-| Manual stop | KEY0 pressed (stopFlag = 1) | Motor shutdown |
-| Low voltage warning | < 10.0 V | Console alert (no shutdown) |
+| Low battery (soft) | < 10.0 V | Motor stop and console alert |
+| Low battery (hard) | < 7.0 V | Motor stop in ISR |
+| Excessive tilt | pitch or roll > 30° | Motor stop |
+| Manual stop | KEY0 pressed | Motor stop |
 
 ---
 

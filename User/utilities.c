@@ -1,14 +1,7 @@
 
 #include "./utilities.h"
 #include "./SYSTEM/usart/usart.h"
-
-int abs(int a)
-{ 		   
-	int temp;
-	if(a<0)  temp=-a;  
-	else temp=a;
-	return temp;
-}
+#include "./BSP/LED/led.h"
 
 void usartTest(void)
 {
@@ -17,25 +10,25 @@ void usartTest(void)
         {
             uint8_t  len = g_usart_rx_sta & 0x3fff;     /* 得到此次接收到的数据长度 */
 					  
-            printf("\r\n您发送的消息为:\r\n"); 
+            printf("\r\nReceived:\r\n");
 					 // sprintf((char *)datatemp, "%s%d", (char *)g_text_buf, i);
-					 if(g_usart_rx_buf[0]=='O' &g_usart_rx_buf[1]=='K')
+					 if(g_usart_rx_buf[0]=='O' && g_usart_rx_buf[1]=='K')
 						{
 							
-							 HAL_GPIO_WritePin(GPIOA,GPIO_PIN_4,GPIO_PIN_RESET);
+							 LED_ON();
 							
 						}
-						 if(g_usart_rx_buf[0]=='N' &g_usart_rx_buf[1]=='K')
+						 if(g_usart_rx_buf[0]=='N' && g_usart_rx_buf[1]=='K')
 						{
 							
-							HAL_GPIO_WritePin(GPIOA,GPIO_PIN_4,GPIO_PIN_SET);       /* LED0 灭 */
+							LED_OFF();       /* LED0 灭 */
 							
 						}
 
             HAL_UART_Transmit(&g_uart1_handle,(uint8_t*)g_usart_rx_buf,len,1000);    /* 发送接收到的数据 */
             while(__HAL_UART_GET_FLAG(&g_uart1_handle,UART_FLAG_TC)!=SET);           /* 等待发送结束 */
 						// while ((USART1->SR & 0X40) == 0);               /* 等待上一个字符发送完成 */
-            printf("\ncomunication over\n");             /* 插入换行 */
+            printf("\r\ncommunication over\r\n");             /* 插入换行 */
             g_usart_rx_sta = 0;
         }
 }

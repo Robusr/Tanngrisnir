@@ -26,6 +26,8 @@
 /* 引脚定义 */
 #define ATK_MS6050_AD0_GPIO_PORT            GPIOA
 #define ATK_MS6050_AD0_GPIO_PIN             GPIO_PIN_15
+/* NOTE: On this board PA15 is the OLED RS line. Keep AD0 tied low on the
+ * module and leave ATK_MS6050_AD0_DRIVE_ENABLE at 0. */
 /* PA15需禁用JTAG才能做普通IO */
 #define ATK_MS6050_AD0_GPIO_CLK_ENABLE()    do{ __HAL_RCC_GPIOA_CLK_ENABLE();   \
                                                 __HAL_RCC_AFIO_CLK_ENABLE();    \
